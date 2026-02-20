@@ -35,3 +35,14 @@ build/
 .LOCAL
 .env.*
 !.env.example
+
+# Build
+target/
+
+# Credentials
+*.env
+
+# IDE
+*.class
+*.jar
+*.war

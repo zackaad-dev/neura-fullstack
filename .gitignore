@@ -23,3 +23,17 @@ frontend/.vite/
 
 .env
 !.env.example
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+!.vscode/settings.json
+.DS_Store
+
+# OS
+Thumbs.db
