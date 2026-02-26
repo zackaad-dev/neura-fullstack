@@ -52,7 +52,6 @@ frontend:
 
     - name: Install dependencies
       working-directory: frontend
-      run: pnpm install --frozen-lockfile
 
     - name: Type check
       working-directory: frontend
