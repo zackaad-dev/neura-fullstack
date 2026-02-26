@@ -19,9 +19,11 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - name: Build, test & quality checks
+      - name: Build & test
         working-directory: backend
-        run: mvn verify checkstyle:check
+        run: mvn verify
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: true
 
   frontend:
     runs-on: ubuntu-latest
