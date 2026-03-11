@@ -43,7 +43,7 @@ function LoginPage() {
             </div>
 
             <button
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => navigate("/dashboard")}
               className="w-full text-sm font-semibold text-white py-3 rounded-xl mt-2 transition hover:opacity-90"
               style={{ backgroundColor: VIOLET }}
             >
@@ -52,7 +52,7 @@ function LoginPage() {
 
             {/* Demo shortcut */}
             <button
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => navigate("/dashboard")}
               className="w-full text-xs font-medium py-2.5 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 transition"
             >
               Use demo account → demo@neura.dev / DemoPassword123
@@ -63,7 +63,7 @@ function LoginPage() {
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">
           No account?{" "}
           <button
-            onClick={() => navigate("/	register")}
+            onClick={() => navigate("/register")}
             className="font-semibold hover:underline"
             style={{ color: VIOLET }}
           >
