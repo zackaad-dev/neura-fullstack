@@ -3,16 +3,16 @@ package app.neura.dto.auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
-public record RegisterRequest(
-        @NotBlank(message = "Name is required")
-        String name,
+@Data
+public class RegisterRequest {
 
-        @Email(message = "Must be a valid email")
         @NotBlank(message = "Email is required")
-        String email,
+        @Email(message = "Must be a valid email address")
+        private String email;
 
-        @Size(min = 8, message = "Password must be at least 8 characters")
         @NotBlank(message = "Password is required")
-        String password
-) {}
+        @Size(min = 8, message = "Password must be at least 8 characters")
+        private String password;
+}
