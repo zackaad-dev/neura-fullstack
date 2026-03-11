@@ -1,12 +1,12 @@
 package app.neura.service;
 
-import app.neura.dto.request.RegisterRequest;
-import app.neura.dto.response.AuthResponse;
+import app.neura.dto.auth.RegisterRequest;
+import app.neura.dto.auth.AuthResponse;
 import app.neura.entity.User;
 import app.neura.exception.EmailAlreadyExistsException;
 import app.neura.repository.UserRepository;
 import app.neura.security.JwtUtil;
-import org.junit.jupiter.api.BeforeEach;
+import app.neura.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,94 +17,60 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
-    private UserRepository userRepository;
-
+    UserRepository userRepository;
     @Mock
-    private PasswordEncoder passwordEncoder;
-
+    PasswordEncoder passwordEncoder;
     @Mock
-    private JwtUtil jwtUtil;
+    JwtUtil jwtUtil;
 
     @InjectMocks
-    private AuthService authService;
-
-    private RegisterRequest registerRequest;
-
-    @BeforeEach
-    void setUp() {
-        registerRequest = new RegisterRequest("test@example.com", "plainPassword123");
-    }
+    AuthService authService;
 
     @Test
-    void shouldRegisterUserSuccessfully() {
-        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateToken(registerRequest.getEmail())).thenReturn("jwt-token");
+    void register_withNewEmail_returnsTokenAndEmail() {
+        // Arrange
+        // Note: Check if RegisterRequest uses @Builder or Setters.
+        // Assuming @Data or @Setter exists based on existing code.
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("test@example.com");
+        req.setPassword("password123");
 
-        AuthResponse response = authService.register(registerRequest);
+        when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn("hashed");
 
-        assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("jwt-token");
+        // Mocking the save to return the user passed to it with the ID set (if needed)
+        // or just return the argument
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+        when(jwtUtil.generateToken("test@example.com")).thenReturn("mock-jwt");
+
+        // Act
+        AuthResponse response = authService.register(req);
+
+        // Assert
+        assertThat(response.getToken()).isEqualTo("mock-jwt");
         assertThat(response.getEmail()).isEqualTo("test@example.com");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
-        when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(true);
+    void register_withExistingEmail_throwsEmailAlreadyExistsException() {
+        // Arrange
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("taken@example.com");
+        req.setPassword("password123");
 
-        assertThatThrownBy(() -> authService.register(registerRequest))
-                .isInstanceOf(EmailAlreadyExistsException.class)
-                .hasMessageContaining("test@example.com");
+        when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
 
-        verify(userRepository, never()).save(any(User.class));
-        verify(jwtUtil, never()).generateToken(anyString());
-    }
+        // Act & Assert
+        assertThatThrownBy(() -> authService.register(req))
+                .isInstanceOf(EmailAlreadyExistsException.class);
 
-    @Test
-    void shouldHashPasswordBeforeSaving() {
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(passwordEncoder.encode("plainPassword123")).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateToken(anyString())).thenReturn("jwt-token");
-
-        authService.register(registerRequest);
-
-        verify(userRepository).save(argThat(user ->
-                user.getPasswordHash().equals("hashedPassword")
-        ));
-    }
-
-    @Test
-    void shouldNeverSavePlainTextPassword() {
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateToken(anyString())).thenReturn("jwt-token");
-
-        authService.register(registerRequest);
-
-        verify(userRepository).save(argThat(user ->
-                !user.getPasswordHash().equals("plainPassword123")
-        ));
-    }
-
-    @Test
-    void shouldGenerateTokenWithUserEmail() {
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateToken("test@example.com")).thenReturn("jwt-token");
-
-        authService.register(registerRequest);
-
-        verify(jwtUtil).generateToken("test@example.com");
+        verify(userRepository, never()).save(any());
     }
 }

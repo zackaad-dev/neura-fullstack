@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor // Lombok: generates constructor for all final fields (cleaner than @Autowired)
+@RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public app.neura.dto.response.AuthResponse register(app.neura.dto.requests.RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException(request.getEmail());
         }
@@ -34,7 +34,8 @@ public class AuthService {
         String token = jwtUtil.generateToken(user.getEmail());
 
         return AuthResponse.builder()
-                .token()
+                .token(token)
+                .email(user.getEmail())
+                .build();
     }
-
 }
