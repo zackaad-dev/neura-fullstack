@@ -1,5 +1,6 @@
 package app.neura.service;
 
+import app.neura.dto.auth.LoginRequest;
 import app.neura.dto.auth.RegisterRequest;
 import app.neura.dto.auth.AuthResponse;
 import app.neura.entity.User;
@@ -34,9 +35,7 @@ class AuthServiceTest {
 
     @Test
     void register_withNewEmail_returnsTokenAndEmail() {
-        // Arrange
-        // Note: Check if RegisterRequest uses @Builder or Setters.
-        // Assuming @Data or @Setter exists based on existing code.
+
         RegisterRequest req = new RegisterRequest();
         req.setEmail("test@example.com");
         req.setPassword("password123");
@@ -44,15 +43,14 @@ class AuthServiceTest {
         when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashed");
 
-        // Mocking the save to return the user passed to it with the ID set (if needed)
-        // or just return the argument
+
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
         when(jwtUtil.generateToken("test@example.com")).thenReturn("mock-jwt");
 
-        // Act
+
         AuthResponse response = authService.register(req);
 
-        // Assert
+
         assertThat(response.getToken()).isEqualTo("mock-jwt");
         assertThat(response.getEmail()).isEqualTo("test@example.com");
         verify(userRepository).save(any(User.class));
@@ -60,17 +58,28 @@ class AuthServiceTest {
 
     @Test
     void register_withExistingEmail_throwsEmailAlreadyExistsException() {
-        // Arrange
+
         RegisterRequest req = new RegisterRequest();
         req.setEmail("taken@example.com");
         req.setPassword("password123");
 
         when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
 
-        // Act & Assert
+
         assertThatThrownBy(() -> authService.register(req))
                 .isInstanceOf(EmailAlreadyExistsException.class);
 
         verify(userRepository, never()).save(any());
     }
+
+    @Test
+    void login_withValidCredentials_returnsJwt(){
+
+    };
+
+    @Test
+    void login_withInvalidCredentials_throwsUnauthorized(){};
+
+    @Test
+    void login_withUnknownEmail_throwsUnauthorized(){};
 }
