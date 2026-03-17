@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import TasksPage from './pages/TasksPage'
 import NotesPage from './pages/NotesPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* 404 - Catch all unknown routes */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import { endpoints } from '../api/endpoints'
 
 function RegisterPage() {
   const VIOLET = 'rgb(98, 78, 173)'
@@ -27,7 +28,10 @@ function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const data = await api.post<{ token: string; email: string }>('/auth/register', {
+      const data = await api.post<
+        { token: string; email: string },
+        { email: string; password: string }
+      >(endpoints.auth.register, {
         email,
         password,
       })
