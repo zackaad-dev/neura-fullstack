@@ -5,9 +5,9 @@ import app.neura.dto.auth.RegisterRequest;
 import app.neura.dto.auth.AuthResponse;
 import app.neura.entity.User;
 import app.neura.exception.EmailAlreadyExistsException;
+import app.neura.exception.WrongLoginCredentialsException;
 import app.neura.repository.UserRepository;
 import app.neura.security.JwtUtil;
-import app.neura.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -74,12 +74,73 @@ class AuthServiceTest {
 
     @Test
     void login_withValidCredentials_returnsJwt(){
+        String email = "test@neura.app";
+        String rawPassword = "password123";
+        String encodedPassword = "encodedPassword";
+        String mockToken = "eyJhbGciOiJIUzI1NiJ9.mocktoken";
 
-    };
+        LoginRequest req = new LoginRequest();
+        req.setEmail(email);
+        req.setPassword(rawPassword);
+
+        User user = User.builder()
+                .email(email)
+                .passwordHash(encodedPassword)
+                .build();
+        when(userRepository.findByEmail(email)).thenReturn(java.util.Optional.of(user));
+        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
+        when(jwtUtil.generateToken(email)).thenReturn(mockToken);
+
+        AuthResponse response = authService.login(req);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isEqualTo(mockToken);
+
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder).matches(rawPassword, encodedPassword);
+        verify(jwtUtil).generateToken(email);
+    }
 
     @Test
-    void login_withInvalidCredentials_throwsUnauthorized(){};
+    void login_withInvalidCredentials_throwsUnauthorized(){
+        String email = "test@neura.app";
+        String rawPassword = "password123";
+        String encodedPassword = "encodedPassword";
+
+        LoginRequest req = new LoginRequest();
+        req.setEmail(email);
+        req.setPassword(rawPassword);
+
+        User user = User.builder()
+                .email(email)
+                .passwordHash(encodedPassword)
+                .build();
+
+        when(userRepository.findByEmail(email)).thenReturn(java.util.Optional.of(user));
+        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.login(req))
+                .isInstanceOf(WrongLoginCredentialsException.class);
+
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder).matches(rawPassword, encodedPassword);
+        verify(jwtUtil, never()).generateToken(any());
+    }
 
     @Test
-    void login_withUnknownEmail_throwsUnauthorized(){};
+    void login_withUnknownEmail_throwsUnauthorized(){
+        String email = "unknown@mail.com";
+        LoginRequest req = new LoginRequest();
+        req.setEmail(email);
+        req.setPassword("password123");
+
+        when(userRepository.findByEmail(email)).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(req))
+                .isInstanceOf(WrongLoginCredentialsException.class);
+
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(jwtUtil, never()).generateToken(any());
+    }
 }
