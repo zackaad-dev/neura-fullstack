@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 public class NeuraApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(NeuraApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(NeuraApplication.class, args);
+    }
 
 }

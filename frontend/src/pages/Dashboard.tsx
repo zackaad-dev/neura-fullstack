@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '../components/layout/Sidebar'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { AddProjectModal } from '../components/ui/AddProjectModal'
@@ -138,16 +138,19 @@ function DashboardContent({ onAddProject, onAddTask }: DashboardContentProps) {
 }
 
 function Dashboard() {
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [dark])
   const [addProjectOpen, setAddProjectOpen] = useState(false)
   const [addTaskOpen, setAddTaskOpen] = useState(false)
 
   const toggleDark = () => {
-    setDark((d) => {
-      if (!d) document.documentElement.classList.add('dark')
-      else document.documentElement.classList.remove('dark')
-      return !d
-    })
+    setDark((d) => !d)
   }
 
   return (
@@ -155,7 +158,10 @@ function Dashboard() {
       <Sidebar activePage="dashboard" dark={dark} onToggleDark={toggleDark} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-8 lg:p-10">
-          <DashboardContent onAddProject={() => setAddProjectOpen(true)} onAddTask={() => setAddTaskOpen(true)} />
+          <DashboardContent
+            onAddProject={() => setAddProjectOpen(true)}
+            onAddTask={() => setAddTaskOpen(true)}
+          />
         </div>
       </main>
 
