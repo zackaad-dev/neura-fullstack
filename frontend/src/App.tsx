@@ -6,7 +6,9 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import TasksPage from './pages/TasksPage'
 import NotesPage from './pages/NotesPage'
+import ForbiddenPage from './pages/ForbiddenPage'
 import NotFoundPage from './pages/NotFoundPage'
+import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
 function App() {
   return (
@@ -15,12 +17,18 @@ function App() {
         {/* The Landing Page is the default route */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* The Dashboard route */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/notes" element={<NotesPage />} />
+        {/* Public auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/notes" element={<NotesPage />} />
+        </Route>
+
+        <Route path="/403" element={<ForbiddenPage />} />
 
         {/* 404 - Catch all unknown routes */}
         <Route path="*" element={<NotFoundPage />} />

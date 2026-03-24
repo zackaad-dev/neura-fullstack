@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Icon } from '../components/icons/Icons'
 import { AddNoteModal } from '../components/ui/AddNoteModal'
@@ -148,14 +148,17 @@ function NotesContent() {
 }
 
 function NotesPage() {
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [dark])
 
   const toggleDark = () => {
-    setDark((d) => {
-      if (!d) document.documentElement.classList.add('dark')
-      else document.documentElement.classList.remove('dark')
-      return !d
-    })
+    setDark((d) => !d)
   }
 
   return (

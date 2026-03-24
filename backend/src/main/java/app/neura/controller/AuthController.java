@@ -1,5 +1,6 @@
 package app.neura.controller;
 
+import app.neura.dto.auth.LoginRequest;
 import app.neura.dto.auth.RegisterRequest;
 import app.neura.dto.auth.AuthResponse;
 import app.neura.service.AuthService;
@@ -30,4 +31,22 @@ public class AuthController {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Login user")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Log out user")
+    public ResponseEntity<AuthResponse> logout(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
 }

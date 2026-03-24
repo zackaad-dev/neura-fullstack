@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../icons/Icons'
 import { SettingsModal } from '../ui/SettingsModal'
+import { useLogout } from '../../hooks/useLogout'
 
 const VIOLET = 'rgb(98, 78, 173)'
 
@@ -28,12 +29,15 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
   ]
 
   const handleNavigate = (page: 'dashboard' | 'tasks' | 'notes') => {
-    navigate(`/${page === 'dashboard' ? '' : page}`)
+    const path = page === 'dashboard' ? '/dashboard' : `/${page}`
+    navigate(path)
   }
 
+  const logout = useLogout()
+
   const handleLogout = () => {
-    navigate('/')
     setDropdownOpen(false)
+    logout()
   }
 
   return (
@@ -154,8 +158,8 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
         </button>
 
         <div className="text-xs text-white/40 px-3 py-2.5">
-          <div>v10020</div>
-          <div>Ændingslog</div>
+          <div>v0.0.1</div>
+          <div>Change log</div>
         </div>
       </div>
 
