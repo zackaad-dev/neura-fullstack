@@ -1,4 +1,6 @@
 package app.neura.dto.project;
 
-public class UpdateProjectRequest {
-}
+public record UpdateProjectRequest(
+        String name,
+        String description
+) {}
