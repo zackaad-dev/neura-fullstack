@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import LandingPage from './pages/LandingPage'
 import Dashboard from './pages/Dashboard'
+import ProjectDetailPage from './pages/ProjectDetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import TasksPage from './pages/TasksPage'
@@ -20,10 +21,11 @@ function App() {
         {/* Public auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        
+
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/notes" element={<NotesPage />} />
         </Route>

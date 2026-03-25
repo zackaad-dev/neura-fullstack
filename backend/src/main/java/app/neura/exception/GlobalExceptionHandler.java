@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handles @Valid failures (e.g. blank email, short password)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
@@ -36,7 +35,6 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
     }
 
-    // Catch-all — prevents stack traces leaking to clients
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneral(
             Exception ex,
@@ -53,5 +51,16 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
         return ResponseEntity.status(status).body(error);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleResourceNotFound(
+            ResourceNotFoundException ex, HttpServletRequest request) {
+
+        return buildError(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
     }
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '../icons/Icons'
-import { MOCK_PROJECTS, type TaskStatus } from '../../lib/constants'
+import { type TaskStatus } from '../../lib/constants'
 
 interface AddTaskModalProps {
   isOpen: boolean
@@ -11,7 +11,7 @@ export function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
   const [title, setTitle] = useState('')
   const [status, setStatus] = useState<TaskStatus>('TODO')
   const [dueDate, setDueDate] = useState('')
-  const [projectName, setProjectName] = useState(MOCK_PROJECTS[0]?.name || '')
+  const [projectName, setProjectName] = useState('')
 
   if (!isOpen) return null
 
@@ -21,7 +21,7 @@ export function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
     setTitle('')
     setStatus('TODO')
     setDueDate('')
-    setProjectName(MOCK_PROJECTS[0]?.name || '')
+    setProjectName('')
     onClose()
   }
 
@@ -87,17 +87,13 @@ export function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project
             </label>
-            <select
+            <input
+              type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Project name"
               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-            >
-              {MOCK_PROJECTS.map((project) => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
 

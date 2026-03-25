@@ -1,7 +1,16 @@
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
+import { getProjects, deleteProject, projectKeys, type Project } from '../../features/projects/api'
+import { AddProjectModal } from './AddProjectModal'
 
-type SettingsPage = 'profile' | 'password' | 'delete-account' | 'default-view' | 'sidebar'
+type SettingsPage =
+  | 'profile'
+  | 'password'
+  | 'delete-account'
+  | 'default-view'
+  | 'sidebar'
+  | 'manage-projects'
 
 const MOCK_USER = {
   name: 'tinoz',
@@ -31,6 +40,33 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const [sidebarOptions, setSidebarOptions] = useState<SidebarOption[]>(MOCK_SIDEBAR_OPTIONS)
   const [defaultViewNotesPerPage, setDefaultViewNotesPerPage] = useState('10')
   const [defaultViewTasksPerPage, setDefaultViewTasksPerPage] = useState('10')
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const queryClient = useQueryClient()
+
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: projectKeys.all,
+    queryFn: getProjects,
+    enabled: isOpen && currentPage === 'manage-projects',
+  })
+
+  const { mutate: deleteProjectMutation } = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: projectKeys.all })
+    },
+  })
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project)
+    setIsEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setEditingProject(null)
+  }
 
   if (!isOpen) return null
 
@@ -52,6 +88,7 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
     {
       category: 'General',
       items: [
+        { id: 'manage-projects' as const, label: 'Manage Projects' },
         { id: 'default-view' as const, label: 'Default View' },
         { id: 'sidebar' as const, label: 'Sidebar' },
       ],
@@ -244,6 +281,60 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
               </div>
             )}
 
+            {currentPage === 'manage-projects' && (
+              <div>
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
+                  Manage Projects
+                </h3>
+                {isLoadingProjects ? (
+                  <div className="text-sm text-gray-500">Loading projects...</div>
+                ) : (
+                  <div className="space-y-3">
+                    {projects?.map((project) => (
+                      <div
+                        key={project.id}
+                        className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-800 rounded-lg"
+                      >
+                        <div>
+                          <div className="text-sm font-medium text-black dark:text-white">
+                            {project.name}
+                          </div>
+                          {project.description && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {project.description}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditProject(project)}
+                            className="text-violet-500 hover:text-violet-700 p-2"
+                            title="Edit project"
+                          >
+                            <Icon.Edit />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this project?')) {
+                                deleteProjectMutation(project.id)
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700 p-2"
+                            title="Delete project"
+                          >
+                            <Icon.Trash />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(!projects || projects.length === 0) && (
+                      <div className="text-sm text-gray-500 italic">No projects found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {currentPage === 'sidebar' && (
               <div>
                 <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Sidebar</h3>
@@ -292,6 +383,13 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
           </div>
         </div>
       </div>
+
+      {/* Edit Project Modal */}
+      <AddProjectModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        project={editingProject}
+      />
     </div>
   )
 }
