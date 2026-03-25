@@ -5,8 +5,7 @@ import { Icon } from '../icons/Icons'
 import { SettingsModal } from '../ui/SettingsModal'
 import { useLogout } from '../../hooks/useLogout'
 import { getProjects, projectKeys } from '../../features/projects/api'
-
-const VIOLET = 'rgb(98, 78, 173)'
+import { VIOLET } from '../../lib/constants'
 
 interface SidebarProps {
   activePage: 'dashboard' | 'tasks' | 'notes'

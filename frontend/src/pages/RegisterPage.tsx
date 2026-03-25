@@ -1,49 +1,62 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api } from '../api/client'
-import { endpoints } from '../api/endpoints'
+import { useMutation } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
+import { register } from '../api/auth'
+import { setToken, setEmail } from '../lib/auth'
+import { VIOLET } from '../lib/constants'
 
 function RegisterPage() {
-  const VIOLET = 'rgb(98, 78, 173)'
   const navigate = useNavigate()
-
-  const [email, setEmail] = useState('')
+  const [email, setEmailField] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [validationError, setValidationError] = useState('')
 
   const inputClass =
     'w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 text-black dark:text-white text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition'
 
-  const handleSubmit = async () => {
-    setError('')
+  const {
+    mutate,
+    isPending,
+    error: apiError,
+  } = useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      register(email, password),
+    onSuccess: (data) => {
+      setToken(data.token)
+      setEmail(data.email)
+      navigate('/projects')
+    },
+  })
 
-    // Check that passwords match (backend handles email & password validation)
+  const displayError = validationError || (apiError instanceof Error ? apiError.message : '')
+
+  const validate = (): boolean => {
+    if (!email) {
+      setValidationError('Email is required')
+      return false
+    }
+    if (!password) {
+      setValidationError('Password is required')
+      return false
+    }
+    if (password.length < 8) {
+      setValidationError('Password must be at least 8 characters')
+      return false
+    }
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setValidationError('Passwords do not match')
+      return false
     }
+    return true
+  }
 
-    setIsLoading(true)
-
-    try {
-      const data = await api.post<
-        { token: string; email: string },
-        { email: string; password: string }
-      >(endpoints.auth.register, {
-        email,
-        password,
-      })
-
-      localStorage.setItem('token', data.token)
-      navigate('/dashboard')
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create account'
-      setError(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setValidationError('')
+    if (!validate()) return
+    mutate({ email, password })
   }
 
   return (
@@ -57,7 +70,13 @@ function RegisterPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 shadow-sm">
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            {displayError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg">
+                {displayError}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                 Email
@@ -67,9 +86,12 @@ function RegisterPage() {
                 className={inputClass}
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmailField(e.target.value)}
+                style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
+                disabled={isPending}
               />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                 Password
@@ -80,8 +102,11 @@ function RegisterPage() {
                 placeholder="Min 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
+                disabled={isPending}
               />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                 Confirm password
@@ -92,24 +117,21 @@ function RegisterPage() {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
+                disabled={isPending}
               />
             </div>
 
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
             <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full text-sm font-semibold text-white py-3 rounded-xl mt-2 transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={isPending}
+              className="w-full py-3 px-4 rounded-xl text-white font-medium hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
               style={{ backgroundColor: VIOLET }}
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isPending ? 'Creating account...' : 'Create account'}
             </button>
-          </div>
+          </form>
         </div>
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">

@@ -1,8 +1,7 @@
 import { ArrowRight, Layout, CheckSquare, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
 import neuraLogo from '../assets/neura_favicon.png';
-
-const VIOLET = "rgb(98, 78, 173)";
+import { VIOLET } from '../lib/constants';
 
 function LandingPage() {
   const navigate = useNavigate(); 

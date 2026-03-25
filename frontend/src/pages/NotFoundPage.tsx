@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
+import { VIOLET } from '../lib/constants'
 
 function NotFoundPage() {
-  const VIOLET = 'rgb(98, 78, 173)'
   const navigate = useNavigate()
 
   return (

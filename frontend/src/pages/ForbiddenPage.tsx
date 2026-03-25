@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/icons/Icons'
+import { VIOLET } from '../lib/constants'
 
 function ForbiddenPage() {
   const navigate = useNavigate()
-  const VIOLET = 'rgb(98, 78, 173)'
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center px-4">
