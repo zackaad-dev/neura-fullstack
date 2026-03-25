@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Icon } from '../icons/Icons'
-import { MOCK_PROJECTS } from '../../lib/constants'
 
 interface AddNoteModalProps {
   isOpen: boolean
@@ -10,7 +9,7 @@ interface AddNoteModalProps {
 export function AddNoteModal({ isOpen, onClose }: AddNoteModalProps) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [projectName, setProjectName] = useState(MOCK_PROJECTS[0]?.name || '')
+  const [projectName, setProjectName] = useState('')
 
   if (!isOpen) return null
 
@@ -19,7 +18,7 @@ export function AddNoteModal({ isOpen, onClose }: AddNoteModalProps) {
     console.log('Creating note:', { title, content, projectName })
     setTitle('')
     setContent('')
-    setProjectName(MOCK_PROJECTS[0]?.name || '')
+    setProjectName('')
     onClose()
   }
 
@@ -69,17 +68,13 @@ export function AddNoteModal({ isOpen, onClose }: AddNoteModalProps) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Project
             </label>
-            <select
+            <input
+              type="text"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Project name"
               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-            >
-              {MOCK_PROJECTS.map((project) => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
 

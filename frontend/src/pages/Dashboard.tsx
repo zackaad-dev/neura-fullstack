@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Sidebar } from '../components/layout/Sidebar'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { AddProjectModal } from '../components/ui/AddProjectModal'
 import { AddTaskModal } from '../components/ui/AddTaskModal'
 import { Icon } from '../components/icons/Icons'
-import { MOCK_PROJECTS, MOCK_NOTES, MOCK_TASKS } from '../lib/constants'
+import { MOCK_NOTES, MOCK_TASKS } from '../lib/constants'
+import { getProjects, projectKeys } from '../features/projects/api'
 
 interface DashboardContentProps {
   onAddProject: () => void
@@ -12,8 +15,14 @@ interface DashboardContentProps {
 }
 
 function DashboardContent({ onAddProject, onAddTask }: DashboardContentProps) {
+  const navigate = useNavigate()
   const recentTasks = MOCK_TASKS.filter((t) => t.status !== 'DONE').slice(0, 4)
   const recentNotes = MOCK_NOTES.slice(0, 3)
+
+  const { data: projects } = useQuery({
+    queryKey: projectKeys.all,
+    queryFn: getProjects,
+  })
 
   return (
     <div>
@@ -27,7 +36,7 @@ function DashboardContent({ onAddProject, onAddTask }: DashboardContentProps) {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Projects', value: MOCK_PROJECTS.length },
+          { label: 'Projects', value: projects?.length || 0 },
           { label: 'Open Tasks', value: MOCK_TASKS.filter((t) => t.status !== 'DONE').length },
           { label: 'Notes', value: MOCK_NOTES.length },
         ].map(({ label, value }) => (
@@ -58,23 +67,26 @@ function DashboardContent({ onAddProject, onAddTask }: DashboardContentProps) {
             </button>
           </div>
           <div className="space-y-3">
-            {MOCK_PROJECTS.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 hover:border-gray-300 dark:hover:border-gray-600 transition cursor-pointer"
-              >
-                <div>
-                  <div className="text-sm font-semibold text-black dark:text-white">{p.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {p.description}
+            {projects?.length ? (
+              projects.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => navigate(`/projects/${p.id}`)}
+                  className="flex items-center justify-between bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 hover:border-gray-300 dark:hover:border-gray-600 transition cursor-pointer"
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-black dark:text-white">{p.name}</div>
+                    {p.description && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {p.description}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="text-right text-xs text-gray-400">
-                  <div>{p.taskCount} tasks</div>
-                  <div>{p.noteCount} notes</div>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm italic text-gray-500 dark:text-gray-400">No projects yet</p>
+            )}
           </div>
         </div>
 

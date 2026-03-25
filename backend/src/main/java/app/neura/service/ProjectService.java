@@ -82,7 +82,7 @@ public class ProjectService {
                 project.getName(),
                 project.getDescription(),
                 project.getCreatedAt(),
-                project.getUpdated_at()
+                project.getUpdatedAt()
         );
     }
 

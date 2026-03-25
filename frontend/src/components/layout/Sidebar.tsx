@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
 import { SettingsModal } from '../ui/SettingsModal'
 import { useLogout } from '../../hooks/useLogout'
+import { getProjects, projectKeys } from '../../features/projects/api'
 
 const VIOLET = 'rgb(98, 78, 173)'
 
@@ -21,12 +23,18 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [projectsExpanded, setProjectsExpanded] = useState(true)
 
   const navItems = [
     { id: 'dashboard' as const, label: 'Dashboard', Icon: Icon.Layout },
     { id: 'tasks' as const, label: 'Tasks', Icon: Icon.CheckSquare },
     { id: 'notes' as const, label: 'Notes', Icon: Icon.FileText },
   ]
+
+  const { data: projects } = useQuery({
+    queryKey: projectKeys.all,
+    queryFn: getProjects,
+  })
 
   const handleNavigate = (page: 'dashboard' | 'tasks' | 'notes') => {
     const path = page === 'dashboard' ? '/dashboard' : `/${page}`
@@ -142,6 +150,43 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
             )
           })}
         </nav>
+
+        {/* Projects Section */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <button
+            onClick={() => setProjectsExpanded(!projectsExpanded)}
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-white/60 hover:text-white text-sm font-medium transition-all"
+          >
+            <span>Projects</span>
+            <div
+              className={`ml-auto transition-transform duration-200 ${
+                projectsExpanded ? 'rotate-180' : ''
+              }`}
+            >
+              <Icon.ChevronDown />
+            </div>
+          </button>
+
+          {projectsExpanded && (
+            <div className="mt-2 space-y-1">
+              {projects?.length ? (
+                projects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all text-left truncate"
+                    title={project.name}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 shrink-0"></span>
+                    <span className="truncate">{project.name}</span>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-xs text-white/40 italic">No projects</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom section - Settings and Version */}
