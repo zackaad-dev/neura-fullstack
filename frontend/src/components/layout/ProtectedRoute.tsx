@@ -1,11 +1,9 @@
-import { Outlet } from 'react-router-dom'
-import ForbiddenPage from '../../pages/ForbiddenPage'
+import { Navigate, Outlet } from 'react-router-dom'
+import { isAuthenticated } from '../../lib/auth'
 
 export const ProtectedRoute = () => {
-  const token = localStorage.getItem('token')
-
-  if (!token) {
-    return <ForbiddenPage />
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />
   }
 
   return <Outlet />

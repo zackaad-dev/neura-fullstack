@@ -26,7 +26,7 @@ function RegisterPage() {
     onSuccess: (data) => {
       setToken(data.token)
       setEmail(data.email)
-      navigate('/projects')
+      navigate('/dashboard')
     },
   })
 

@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('neura_token')
 
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -17,7 +17,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     !window.location.pathname.includes('/login') &&
     !window.location.pathname.includes('/register')
   ) {
-    localStorage.removeItem('token')
+    localStorage.removeItem('neura_token')
+    localStorage.removeItem('neura_email')
     window.location.href = '/login'
     throw new Error('Please log in again')
   }
