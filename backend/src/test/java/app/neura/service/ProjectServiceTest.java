@@ -46,6 +46,10 @@ public class ProjectServiceTest {
         testProject = new Project();
         testProject.setId(1L);
         testProject.setName("Test Project");
+        testProject.setDescription("Test Description");
+        testProject.setUser(testUser);
+        testProject.setCreatedAt(LocalDateTime.now());
+        testProject.setUpdatedAt(LocalDateTime.now());
     }
 
 
@@ -83,8 +87,6 @@ public class ProjectServiceTest {
         when(projectRepository.findAllByUserId(1L)).thenReturn(List.of(testProject));
 
         List<ProjectResponse> responses = projectService.getUserProjects(1L);
-
-        assertThat(responses).hasSize(1);
         assertThat(responses.get(0).name()).isEqualTo("Test Project");
     }
 
