@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/projects")
+@RequestMapping("/projects")
 public class ProjectController {
 
     private final ProjectService projectService;

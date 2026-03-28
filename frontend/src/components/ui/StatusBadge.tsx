@@ -1,4 +1,4 @@
-type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE'
+import { type TaskStatus } from '../../lib/constants'
 
 export function StatusBadge({ status }: { status: TaskStatus }) {
   const config = {
@@ -9,8 +9,8 @@ export function StatusBadge({ status }: { status: TaskStatus }) {
     },
     IN_PROGRESS: {
       label: 'In Progress',
-      bg: 'bg-blue-50 dark:bg-blue-900/30',
-      text: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-amber-50 dark:bg-amber-900/30',
+      text: 'text-amber-600 dark:text-amber-400',
     },
     DONE: {
       label: 'Done',

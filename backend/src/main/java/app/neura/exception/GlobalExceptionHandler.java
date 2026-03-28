@@ -63,4 +63,15 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
     }
+
+    @ExceptionHandler(DemoAccountException.class)
+    public ResponseEntity<ApiError> handleDemoAccount(
+            DemoAccountException ex, HttpServletRequest request) {
+        return buildError(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
 }
