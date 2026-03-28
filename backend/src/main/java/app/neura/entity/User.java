@@ -41,4 +41,10 @@ public class User {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @Column(name = "display_name", length = 100)
+    private String displayName;
+
+    @Column(name = "is_demo", nullable = false)
+    private boolean demo;
 }
