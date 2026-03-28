@@ -43,7 +43,7 @@ public class TaskService {
     }
 
     public List<TaskResponse> getProjectTasks(Long projectId, Long userId) {
-        return taskRepository.findAllByProjectIdAndProjectUserId(projectId, userId).stream()
+        return taskRepository.findAllByProjectId(projectId, userId).stream()
                 .map(this::toResponse)
                 .toList();
     }
