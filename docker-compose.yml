@@ -3,9 +3,9 @@ services:
     image: postgres:16
     container_name: neura-db
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - neura_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,13 +20,13 @@ services:
       dockerfile: Dockerfile
     container_name: neura-backend
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      DB_URL: ${DB_URL}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE}"
+      DB_URL: "${DB_URL}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      JWT_SECRET: "${JWT_SECRET}"
+      JWT_EXPIRATION_MS: "${JWT_EXPIRATION_MS}"
+      CORS_ALLOWED_ORIGINS: "${CORS_ORIGINS}"
     ports:
       - "8080:8080"
     depends_on:
@@ -40,6 +40,9 @@ services:
     container_name: neura-frontend
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
 
