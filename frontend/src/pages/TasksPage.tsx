@@ -1,249 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Sidebar } from '../components/layout/Sidebar'
+import { useQuery, useQueries } from '@tanstack/react-query'
+import { getProjects, projectKeys } from '../features/projects/api'
+import { getTasks, taskKeys } from '../api/tasks'
 import { StatusBadge } from '../components/ui/StatusBadge'
-import { Icon } from '../components/icons/Icons'
-import { AddTaskModal } from '../components/ui/AddTaskModal'
-import { MOCK_TASKS } from '../lib/constants'
-
-const ITEMS_PER_PAGE = 10
-
-function TasksContent() {
-  const [currentPageOpen, setCurrentPageOpen] = useState(1)
-  const [currentPageCompleted, setCurrentPageCompleted] = useState(1)
-  const [completedTasks, setCompletedTasks] = useState<Set<number>>(
-    new Set(MOCK_TASKS.filter((t) => t.status === 'DONE').map((t) => t.id))
-  )
-  const [addTaskOpen, setAddTaskOpen] = useState(false)
-
-  // Separate tasks into open and completed
-  const allTasks = MOCK_TASKS.map((task) => ({
-    ...task,
-    isCompleted: completedTasks.has(task.id),
-  }))
-
-  const openTasks = allTasks.filter((t) => !t.isCompleted)
-  const completedTasksArray = allTasks.filter((t) => t.isCompleted)
-
-  // Pagination for open tasks
-  const totalPagesOpen = Math.ceil(openTasks.length / ITEMS_PER_PAGE)
-  const startIndexOpen = (currentPageOpen - 1) * ITEMS_PER_PAGE
-  const paginatedOpenTasks = openTasks.slice(startIndexOpen, startIndexOpen + ITEMS_PER_PAGE)
-
-  // Pagination for completed tasks
-  const totalPagesCompleted = Math.ceil(completedTasksArray.length / ITEMS_PER_PAGE)
-  const startIndexCompleted = (currentPageCompleted - 1) * ITEMS_PER_PAGE
-  const paginatedCompletedTasks = completedTasksArray.slice(
-    startIndexCompleted,
-    startIndexCompleted + ITEMS_PER_PAGE
-  )
-
-  const handleToggleTask = (taskId: number) => {
-    const newCompleted = new Set(completedTasks)
-    if (newCompleted.has(taskId)) {
-      newCompleted.delete(taskId)
-    } else {
-      newCompleted.add(taskId)
-    }
-    setCompletedTasks(newCompleted)
-  }
-
-  const handleNextPageOpen = () => {
-    if (currentPageOpen < totalPagesOpen) {
-      setCurrentPageOpen(currentPageOpen + 1)
-    }
-  }
-
-  const handlePrevPageOpen = () => {
-    if (currentPageOpen > 1) {
-      setCurrentPageOpen(currentPageOpen - 1)
-    }
-  }
-
-  const handleNextPageCompleted = () => {
-    if (currentPageCompleted < totalPagesCompleted) {
-      setCurrentPageCompleted(currentPageCompleted + 1)
-    }
-  }
-
-  const handlePrevPageCompleted = () => {
-    if (currentPageCompleted > 1) {
-      setCurrentPageCompleted(currentPageCompleted - 1)
-    }
-  }
-
-  return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-black dark:text-white">Tasks</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Manage and track all your tasks.
-          </p>
-        </div>
-        <button
-          onClick={() => setAddTaskOpen(true)}
-          className="text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg p-2.5 transition"
-        >
-          <Icon.Plus />
-        </button>
-      </div>
-
-      {/* Open Tasks Card */}
-      <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-6">
-        <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wider mb-4">
-          Open Tasks
-        </h2>
-        <div className="space-y-3">
-          {paginatedOpenTasks.length > 0 ? (
-            paginatedOpenTasks.map((task) => (
-              <div
-                key={task.id}
-                className="bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-xl px-5 py-4 hover:border-gray-300 dark:hover:border-gray-600 transition"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <button
-                      onClick={() => handleToggleTask(task.id)}
-                      className="mt-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition shrink-0"
-                    >
-                      <Icon.Square />
-                    </button>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-black dark:text-white">
-                        {task.title}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {task.projectName}
-                        </span>
-                        <span className="text-xs text-gray-400">·</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Due {task.dueDate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <StatusBadge status={task.status as 'TODO' | 'IN_PROGRESS' | 'DONE'} />
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <p className="text-sm">No open tasks</p>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination for Open Tasks */}
-        {paginatedOpenTasks.length > 0 && (
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-            <button
-              onClick={handlePrevPageOpen}
-              disabled={currentPageOpen === 1}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              <Icon.ChevronLeft />
-              Previous
-            </button>
-
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Page {currentPageOpen} of {totalPagesOpen}
-            </div>
-
-            <button
-              onClick={handleNextPageOpen}
-              disabled={currentPageOpen === totalPagesOpen}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              Next
-              <Icon.ChevronRight />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Completed Tasks Card */}
-      <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-        <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wider mb-4">
-          Completed Tasks
-        </h2>
-        <div className="space-y-3">
-          {paginatedCompletedTasks.length > 0 ? (
-            paginatedCompletedTasks.map((task) => (
-              <div
-                key={task.id}
-                className="bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-xl px-5 py-4 hover:border-gray-300 dark:hover:border-gray-600 transition opacity-75"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <button
-                      onClick={() => handleToggleTask(task.id)}
-                      className="mt-0.5 text-green-500 hover:text-green-600 transition shrink-0"
-                    >
-                      <Icon.Check />
-                    </button>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-500 dark:text-gray-400 line-through">
-                        {task.title}
-                      </div>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {task.projectName}
-                        </span>
-                        <span className="text-xs text-gray-400">·</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Due {task.dueDate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <StatusBadge status={task.status as 'TODO' | 'IN_PROGRESS' | 'DONE'} />
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <p className="text-sm">No completed tasks yet</p>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination for Completed Tasks */}
-        {paginatedCompletedTasks.length > 0 && (
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-            <button
-              onClick={handlePrevPageCompleted}
-              disabled={currentPageCompleted === 1}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              <Icon.ChevronLeft />
-              Previous
-            </button>
-
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Page {currentPageCompleted} of {totalPagesCompleted}
-            </div>
-
-            <button
-              onClick={handleNextPageCompleted}
-              disabled={currentPageCompleted === totalPagesCompleted}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              Next
-              <Icon.ChevronRight />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Add Task Modal */}
-      <AddTaskModal isOpen={addTaskOpen} onClose={() => setAddTaskOpen(false)} />
-    </div>
-  )
-}
+import { Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 function TasksPage() {
   const [dark, setDark] = useState(true)
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (dark) {
       document.documentElement.classList.add('dark')
@@ -253,15 +20,88 @@ function TasksPage() {
   }, [dark])
 
   const toggleDark = () => {
-    setDark((d) => !d)
+    setDark((prev) => !prev)
   }
 
+  const { data: projects, isLoading: isProjectsLoading } = useQuery({
+    queryKey: projectKeys.all,
+    queryFn: getProjects,
+  })
+
+  // Fetch tasks for all projects
+  const taskQueries = useQueries({
+    queries: (projects || []).map((project) => ({
+      queryKey: taskKeys.list(project.id),
+      queryFn: () => getTasks(project.id),
+      enabled: !!projects,
+    })),
+  })
+
+  const isTasksLoading = taskQueries.some((q) => q.isLoading)
+
+  const allTasks = useMemo(() => {
+    return taskQueries
+      .map((q, index) => {
+        const projectTasks = q.data || []
+        const project = projects?.[index]
+        return projectTasks.map((t) => ({ ...t, projectName: project?.name }))
+      })
+      .flat()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }, [taskQueries, projects])
+
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-black">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-black transition-colors duration-300">
       <Sidebar activePage="tasks" dark={dark} onToggleDark={toggleDark} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-8 lg:p-10">
-          <TasksContent />
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-black dark:text-white">All Tasks</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              A global view of tasks across all your projects.
+            </p>
+          </div>
+
+          {(isProjectsLoading || isTasksLoading) ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Loading tasks...
+            </div>
+          ) : allTasks.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allTasks.map((task) => (
+                <div
+                  key={task.id}
+                  onClick={() => navigate(`/projects/${task.projectId}`)}
+                  className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-5 rounded-2xl flex flex-col gap-3 cursor-pointer hover:border-violet-500 dark:hover:border-violet-500 transition shadow-sm hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-base font-semibold text-black dark:text-white">{task.title}</h3>
+                      <p className="text-xs text-violet-600 dark:text-violet-400 font-medium mt-1">
+                        {task.projectName}
+                      </p>
+                    </div>
+                  </div>
+                  {task.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{task.description}</p>
+                  )}
+                  <div className="flex items-center gap-3 mt-auto pt-2">
+                    <StatusBadge status={task.status} />
+                    {task.dueDate && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-12 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
+              <p className="text-gray-500 dark:text-gray-400">No tasks found. Create one inside a project.</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

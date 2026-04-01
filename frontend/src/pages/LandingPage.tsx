@@ -41,9 +41,7 @@ function LandingPage() {
         </div>
 
         <h1 className="text-5xl md:text-6xl font-bold text-black dark:text-white leading-tight max-w-2xl mb-6">
-          Organised thinking,
-          <br />
-          <span style={{ color: VIOLET }}>clear execution.</span>
+          Neura - <span style={{ color: VIOLET }}>Your Second Brain</span>
         </h1>
 
         <p className="text-lg text-gray-500 dark:text-gray-400 max-w-md mb-10 leading-relaxed">
@@ -53,17 +51,11 @@ function LandingPage() {
 
         <div className="flex items-center gap-4">
           <button
-            onClick={() => onNavigate('register')}
+            onClick={() => navigate('/register')}
             className="flex items-center gap-2 text-sm font-semibold text-white px-6 py-3 rounded-xl transition hover:opacity-90 shadow-lg"
             style={{ backgroundColor: VIOLET, boxShadow: `0 8px 32px rgb(98 78 173 / 0.35)` }}
           >
             Start for free <ArrowRight size={16} />
-          </button>
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition underline underline-offset-4"
-          >
-            View demo
           </button>
         </div>
       </section>

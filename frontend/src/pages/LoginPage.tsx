@@ -100,7 +100,7 @@ function LoginPage() {
               <input
                 type="password"
                 className={inputClass}
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}

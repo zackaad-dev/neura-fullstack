@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
 import { getProjects, deleteProject, projectKeys, type Project } from '../../features/projects/api'
 import { AddProjectModal } from './AddProjectModal'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { getEmail } from '../../lib/auth'
 
 type SettingsPage =
   | 'profile'
@@ -12,16 +14,6 @@ type SettingsPage =
   | 'sidebar'
   | 'manage-projects'
 
-const MOCK_USER = {
-  name: 'tinoz',
-  email: 'tinoz@example.com',
-}
-
-const MOCK_SIDEBAR_OPTIONS = [
-  { id: 'upcoming', label: 'Upcoming', checked: true },
-  { id: 'today', label: 'Today', checked: true },
-]
-
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -29,19 +21,14 @@ interface SettingsModalProps {
   onToggleDark: () => void
 }
 
-interface SidebarOption {
-  id: string
-  label: string
-  checked: boolean
-}
-
 export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: SettingsModalProps) {
   const [currentPage, setCurrentPage] = useState<SettingsPage>('profile')
-  const [sidebarOptions, setSidebarOptions] = useState<SidebarOption[]>(MOCK_SIDEBAR_OPTIONS)
-  const [defaultViewNotesPerPage, setDefaultViewNotesPerPage] = useState('10')
-  const [defaultViewTasksPerPage, setDefaultViewTasksPerPage] = useState('10')
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const { data: user } = useCurrentUser()
+  const fallbackEmail = getEmail()
+  const displayLabel = user?.displayName ?? fallbackEmail ?? 'User'
+  const emailLabel = user?.email ?? fallbackEmail ?? 'Unknown email'
 
   const queryClient = useQueryClient()
 
@@ -70,12 +57,6 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
 
   if (!isOpen) return null
 
-  const handleToggleSidebarOption = (id: string) => {
-    setSidebarOptions(
-      sidebarOptions.map((opt) => (opt.id === id ? { ...opt, checked: !opt.checked } : opt))
-    )
-  }
-
   const menuItems = [
     {
       category: 'Account',
@@ -90,14 +71,20 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
       items: [
         { id: 'manage-projects' as const, label: 'Manage Projects' },
         { id: 'default-view' as const, label: 'Default View' },
-        { id: 'sidebar' as const, label: 'Sidebar' },
+        { id: 'sidebar' as const, label: 'Sidebar', disabled: true },
       ],
     },
   ]
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(event) => event.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-xl font-bold text-black dark:text-white">Settings</h2>
@@ -119,19 +106,37 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                   {section.category}
                 </div>
                 <div className="space-y-1 px-2 pb-4">
-                  {section.items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setCurrentPage(item.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${
-                        currentPage === item.id
-                          ? 'bg-white dark:bg-black text-black dark:text-white font-medium shadow-sm'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-black/50'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {section.items.map((item) => {
+                    const isDisabled = item.disabled ?? false
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          if (!isDisabled) {
+                            setCurrentPage(item.id)
+                          }
+                        }}
+                        disabled={isDisabled}
+                        className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all ${
+                          currentPage === item.id && !isDisabled
+                            ? 'bg-white dark:bg-black text-black dark:text-white font-medium shadow-sm'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-black/50'
+                        } ${
+                          isDisabled ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        <span className="flex items-center gap-1">
+                          <span>{item.label}</span>
+                          {isDisabled && (
+                            <span className="text-[11px] italic text-gray-500 dark:text-gray-400">
+                              (Disabled)
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             ))}
@@ -141,29 +146,26 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
           <div className="flex-1 p-6 overflow-y-auto">
             {currentPage === 'profile' && (
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Profile</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-lg font-semibold text-black dark:text-white">Profile</h3>
+                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
+                    Coming soon
+                  </span>
+                </div>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={MOCK_USER.name}
-                      disabled
-                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-black dark:text-white text-sm"
-                    />
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Display name
+                    </p>
+                    <p className="text-sm font-semibold text-black dark:text-white">
+                      {displayLabel}
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Email
-                    </label>
-                    <input
-                      type="email"
-                      value={MOCK_USER.email}
-                      disabled
-                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-black dark:text-white text-sm"
-                    />
+                    </p>
+                    <p className="text-sm font-semibold text-black dark:text-white">{emailLabel}</p>
                   </div>
                 </div>
               </div>
@@ -171,9 +173,14 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
 
             {currentPage === 'password' && (
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
-                  Change Password
-                </h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-lg font-semibold text-black dark:text-white">
+                    Change Password
+                  </h3>
+                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
+                    Coming soon
+                  </span>
+                </div>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -181,8 +188,9 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="password"
-                      placeholder="Enter current password"
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      placeholder="Coming soon"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
                     />
                   </div>
                   <div>
@@ -191,8 +199,9 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="password"
-                      placeholder="Enter new password"
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      placeholder="Coming soon"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
                     />
                   </div>
                   <div>
@@ -201,11 +210,15 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="password"
-                      placeholder="Confirm new password"
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      placeholder="Coming soon"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
                     />
                   </div>
-                  <button className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition mt-2">
+                  <button
+                    disabled
+                    className="w-full px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium transition mt-2 opacity-70 cursor-not-allowed"
+                  >
                     Update Password
                   </button>
                 </div>
@@ -214,9 +227,14 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
 
             {currentPage === 'delete-account' && (
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
-                  Delete Account
-                </h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-lg font-semibold text-black dark:text-white">
+                    Delete Account
+                  </h3>
+                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
+                    Coming soon
+                  </span>
+                </div>
                 <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-4 mb-4">
                   <p className="text-sm text-red-800 dark:text-red-400">
                     This action is permanent and cannot be undone. All your data will be deleted
@@ -230,11 +248,15 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="email"
-                      placeholder={MOCK_USER.email}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                      value={emailLabel}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
                     />
                   </div>
-                  <button className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+                  <button
+                    disabled
+                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium transition opacity-70 cursor-not-allowed"
+                  >
                     Permanently Delete Account
                   </button>
                 </div>
@@ -248,34 +270,20 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Notes per page
-                    </label>
-                    <select
-                      value={defaultViewNotesPerPage}
-                      onChange={(e) => setDefaultViewNotesPerPage(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    >
-                      <option value="5">5 per page</option>
-                      <option value="10">10 per page</option>
-                      <option value="20">20 per page</option>
-                      <option value="50">50 per page</option>
-                    </select>
+                    </p>
+                    <p className="text-sm font-semibold text-black dark:text-white">
+                      10 per page (locked)
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Tasks per page
-                    </label>
-                    <select
-                      value={defaultViewTasksPerPage}
-                      onChange={(e) => setDefaultViewTasksPerPage(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    >
-                      <option value="5">5 per page</option>
-                      <option value="10">10 per page</option>
-                      <option value="20">20 per page</option>
-                      <option value="50">50 per page</option>
-                    </select>
+                    </p>
+                    <p className="text-sm font-semibold text-black dark:text-white">
+                      10 per page (locked)
+                    </p>
                   </div>
                 </div>
               </div>
@@ -337,28 +345,13 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
 
             {currentPage === 'sidebar' && (
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Sidebar</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Choose which sections to display in the sidebar
-                </p>
-                <div className="space-y-3">
-                  {sidebarOptions.map((option) => (
-                    <label
-                      key={option.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={option.checked}
-                        onChange={() => handleToggleSidebarOption(option.id)}
-                        className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {option.label}
-                      </span>
-                    </label>
-                  ))}
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-lg font-semibold text-black dark:text-white">Sidebar</h3>
+                  <span className="text-xs italic text-gray-500 dark:text-gray-400">Disabled</span>
                 </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Sidebar filters are temporarily disabled and will return in a future release.
+                </p>
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
                   <div className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

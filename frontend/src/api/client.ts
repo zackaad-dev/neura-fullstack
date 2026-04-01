@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? ''
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('neura_token')
@@ -27,8 +27,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     if (res.status === 401) {
       throw new Error('Invalid email or password')
     }
-    const error = await res.json().catch(() => ({ message: 'Unexpected error' }))
-    throw new Error(error.message ?? `HTTP Error ${res.status}`)
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message ?? 'An error occurred. Please try again later');
   }
 
   // 204 No Content

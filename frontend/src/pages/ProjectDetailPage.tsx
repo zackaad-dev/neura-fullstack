@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Sidebar } from '../components/layout/Sidebar'
 import { Icon } from '../components/icons/Icons'
+import { Loader2 } from 'lucide-react'
 import { getProject, projectKeys } from '../features/projects/api'
 import { getTasks, createTask, updateTask, deleteTask, taskKeys } from '../api/tasks'
 import type { TaskResponse, CreateTaskDto, UpdateTaskDto } from '../api/tasks'
@@ -175,7 +176,10 @@ export default function ProjectDetailPage() {
 
               <div className="space-y-3 flex-1">
                 {isTasksLoading ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Loading tasks...</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading tasks...
+                  </div>
                 ) : tasks && tasks.length > 0 ? (
                   tasks.map((task) => (
                     <div key={task.id} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl flex flex-col gap-2">
@@ -223,7 +227,9 @@ export default function ProjectDetailPage() {
                 Notes
               </h2>
               <div className="space-y-3">
-                <p className="text-sm italic text-gray-500 dark:text-gray-400">No notes yet</p>
+                <p className="text-sm italic text-gray-500 dark:text-gray-400">
+                  Notes are coming soon — check back once this section is fully wired to the backend.
+                </p>
               </div>
             </div>
           </div>

@@ -24,7 +24,7 @@ export default [
     },
     rules: {
       'no-undef': 'off', // TypeScript handles this
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', args: 'none' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',

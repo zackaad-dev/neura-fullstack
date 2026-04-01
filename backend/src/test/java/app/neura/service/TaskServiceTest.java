@@ -85,7 +85,7 @@ public class TaskServiceTest {
     }
     @Test
     void getTasksByProject_success() {
-        when(taskRepository.findAllByProjectId(1L, testUser.getId())).thenReturn(List.of(testTask));
+        when(taskRepository.findAllByProjectIdAndProjectUserId(1L, testUser.getId())).thenReturn(List.of(testTask));
 
         List<TaskResponse> responses = taskService.getProjectTasks(1L, testUser.getId());
 

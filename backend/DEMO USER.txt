@@ -1,8 +1,0 @@
-Even simpler. Once the app is deployed and the database is up, just exec into the postgres container and run the SQL directly:
-bashdocker exec -it neura-db psql -U neura -d neura
-Then:
-sqlINSERT INTO users (email, password_hash, display_name, is_demo, created_at, updated_at)
-VALUES ('demo@neura.dev', '$2a$...', 'Demo User', TRUE, NOW(), NOW());
-You'll need a real BCrypt hash for the password though — you can't just type DemoPassword123 in plaintext. Easiest way to generate one is to just register the account normally through the app UI first, then flip the flag:
-sqlUPDATE users SET is_demo = TRUE, display_name = 'Demo User' WHERE email = 'demo@neura.dev';
-That way BCrypt handles the hashing and you just set the two fields manually. Much simpler.

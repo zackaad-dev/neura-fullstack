@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
 import { SettingsModal } from '../ui/SettingsModal'
+import { AddProjectModal } from '../ui/AddProjectModal'
 import { useLogout } from '../../hooks/useLogout'
+import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { getProjects, projectKeys } from '../../features/projects/api'
+import { getEmail } from '../../lib/auth'
 import { VIOLET } from '../../lib/constants'
 
 interface SidebarProps {
@@ -13,16 +16,17 @@ interface SidebarProps {
   onToggleDark: () => void
 }
 
-const MOCK_USER = {
-  name: 'tinoz',
-  email: 'tinoz@example.com',
-}
-
 export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectsExpanded, setProjectsExpanded] = useState(true)
+  const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const { data: user } = useCurrentUser()
+  const fallbackEmail = getEmail()
+  const displayLabel = user?.displayName ?? fallbackEmail ?? 'User'
+  const emailLabel = user?.email ?? fallbackEmail ?? 'Unknown email'
+  const avatarInitial = (displayLabel || emailLabel || '?').charAt(0).toUpperCase()
 
   const navItems = [
     { id: 'dashboard' as const, label: 'Dashboard', Icon: Icon.Layout },
@@ -66,12 +70,17 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
             className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2.5 text-white transition-all"
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-sm font-semibold shrink-0">
-                {MOCK_USER.name[0].toUpperCase()}
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white shrink-0"
+                style={{ backgroundColor: VIOLET }}
+              >
+                {avatarInitial}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold truncate">{MOCK_USER.name}</div>
-                <div className="text-xs text-white/60 truncate">1/5 opgaver</div>
+                <div className="text-sm font-semibold truncate">{displayLabel}</div>
+                <div className="text-xs text-white/60 truncate">
+                  {projects?.length ?? 0} projects
+                </div>
               </div>
             </div>
             <Icon.ChevronDown />
@@ -83,9 +92,9 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                 <div className="text-sm font-semibold text-black dark:text-white">
-                  {MOCK_USER.name}
+                  {displayLabel}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{MOCK_USER.email}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{emailLabel}</div>
               </div>
 
               {/* Menu Items */}
@@ -97,7 +106,7 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition text-left"
               >
                 <Icon.Settings />
-                Indstillinger
+                Settings
               </button>
 
               <div className="border-t border-gray-100 dark:border-gray-800"></div>
@@ -120,7 +129,7 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition text-left"
               >
                 <Icon.LogOut />
-                Log ud
+                Log out
               </button>
             </div>
           )}
@@ -152,19 +161,29 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
 
         {/* Projects Section */}
         <div className="mt-6 pt-6 border-t border-white/10">
-          <button
-            onClick={() => setProjectsExpanded(!projectsExpanded)}
-            className="w-full flex items-center gap-2 px-3 py-2.5 text-white/60 hover:text-white text-sm font-medium transition-all"
-          >
-            <span>Projects</span>
-            <div
-              className={`ml-auto transition-transform duration-200 ${
-                projectsExpanded ? 'rotate-180' : ''
-              }`}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setProjectsExpanded(!projectsExpanded)}
+              className="flex-1 flex items-center gap-2 px-3 py-2.5 text-white/60 hover:text-white text-sm font-medium rounded-lg transition-all"
             >
-              <Icon.ChevronDown />
-            </div>
-          </button>
+              <span>Projects</span>
+              <div
+                className={`ml-auto transition-transform duration-200 ${
+                  projectsExpanded ? 'rotate-180' : ''
+                }`}
+              >
+                <Icon.ChevronDown />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreateProjectOpen(true)}
+              className="p-2 flex items-center justify-center rounded-lg text-white/80 bg-white/10 hover:bg-white/20 transition"
+              title="Create project"
+            >
+              <Icon.Plus />
+            </button>
+          </div>
 
           {projectsExpanded && (
             <div className="mt-2 space-y-1">
@@ -214,6 +233,7 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
         isDark={dark}
         onToggleDark={onToggleDark}
       />
+      <AddProjectModal isOpen={createProjectOpen} onClose={() => setCreateProjectOpen(false)} />
     </aside>
   )
 }

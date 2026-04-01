@@ -6,9 +6,16 @@ import { register } from '../api/auth'
 import { setToken, setEmail } from '../lib/auth'
 import { VIOLET } from '../lib/constants'
 
+type RegisterPayload = {
+  email: string
+  password: string
+  displayName?: string
+}
+
 function RegisterPage() {
   const navigate = useNavigate()
   const [email, setEmailField] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [validationError, setValidationError] = useState('')
@@ -21,8 +28,8 @@ function RegisterPage() {
     isPending,
     error: apiError,
   } = useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      register(email, password),
+    mutationFn: ({ email, password, displayName }: RegisterPayload) =>
+      register({ email, password, displayName }),
     onSuccess: (data) => {
       setToken(data.token)
       setEmail(data.email)
@@ -56,7 +63,12 @@ function RegisterPage() {
     e.preventDefault()
     setValidationError('')
     if (!validate()) return
-    mutate({ email, password })
+    const normalizedDisplayName = displayName.trim()
+    mutate({
+      email,
+      password,
+      displayName: normalizedDisplayName ? normalizedDisplayName : undefined,
+    })
   }
 
   return (
@@ -94,12 +106,27 @@ function RegisterPage() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                Display name (optional)
+              </label>
+              <input
+                type="text"
+                className={inputClass}
+                placeholder="Alex Johnson"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
+                disabled={isPending}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <input
                 type="password"
                 className={inputClass}
-                placeholder="Min 8 characters"
+                placeholder="Create a strong password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
@@ -114,7 +141,7 @@ function RegisterPage() {
               <input
                 type="password"
                 className={inputClass}
-                placeholder="••••••••"
+                placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 style={{ '--tw-ring-color': VIOLET } as React.CSSProperties}
