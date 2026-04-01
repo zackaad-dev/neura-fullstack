@@ -17,13 +17,16 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
+    private final UserService userService;
 
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository) {
+    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository, UserService userService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
+        this.userService = userService;
     }
 
     public TaskResponse createTask(CreateTaskRequest request, Long projectId, Long userId) {
+        userService.guardDemoAccount(userId);
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
@@ -55,6 +58,7 @@ public class TaskService {
     }
 
     public TaskResponse updateTask(Long taskId, UpdateTaskRequest request, Long userId) {
+        userService.guardDemoAccount(userId);
         Task task = taskRepository.findByIdAndProjectUserId(taskId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
@@ -73,6 +77,7 @@ public class TaskService {
     }
 
     public void deleteTask(Long taskId, Long userId) {
+        userService.guardDemoAccount(userId);
         Task task = taskRepository.findByIdAndProjectUserId(taskId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         taskRepository.delete(task);
