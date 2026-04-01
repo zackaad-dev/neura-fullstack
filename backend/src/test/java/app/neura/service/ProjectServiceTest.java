@@ -4,6 +4,7 @@ import app.neura.dto.project.ProjectResponse;
 import app.neura.dto.project.UpdateProjectRequest;
 import app.neura.entity.Project;
 import app.neura.entity.User;
+import app.neura.exception.DemoAccountException;
 import app.neura.exception.ResourceNotFoundException;
 import app.neura.repository.ProjectRepository;
 import app.neura.repository.UserRepository;
@@ -37,8 +38,15 @@ public class ProjectServiceTest {
     private User testUser;
     private Project testProject;
 
+    @Mock
+    private UserService userService;
+
+    @Mock
+    CreateProjectRequest request;
+
     @BeforeEach
     void setUp() {
+        lenient().doNothing().when(userService).guardDemoAccount(any());
         testUser = new User();
         testUser.setId(1L);
         testUser.setEmail("foo@bar.com");
@@ -238,5 +246,12 @@ public class ProjectServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
         verify(projectRepository, never()).delete(any());
+    }
+
+    @Test
+    void createProject_whenDemoAccount_throwsDemoAccountException() {
+        doThrow(new DemoAccountException()).when(userService).guardDemoAccount(1L);
+        assertThatThrownBy(() -> projectService.createProject(request, 1L))
+                .isInstanceOf(DemoAccountException.class);
     }
 }

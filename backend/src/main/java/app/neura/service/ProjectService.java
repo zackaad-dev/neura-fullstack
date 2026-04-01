@@ -17,13 +17,16 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, UserService userService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     public ProjectResponse createProject(CreateProjectRequest request, Long userId) {
+        userService.guardDemoAccount(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -49,6 +52,7 @@ public class ProjectService {
     }
 
     public ProjectResponse updateProject(Long projectId, UpdateProjectRequest request, Long userId) {
+        userService.guardDemoAccount(userId);
         Project project = getOwnedProject(projectId, userId);
 
         if (request.name() != null && !request.name().isBlank()) {
@@ -72,6 +76,7 @@ public class ProjectService {
     }
 
     public void deleteProject(Long projectId, Long userId) {
+        userService.guardDemoAccount(userId);
         Project project = getOwnedProject(projectId, userId);
         projectRepository.delete(project);
     }

@@ -7,6 +7,7 @@ import app.neura.entity.Project;
 import app.neura.entity.Task;
 import app.neura.entity.TaskStatus;
 import app.neura.entity.User;
+import app.neura.exception.DemoAccountException;
 import app.neura.repository.ProjectRepository;
 import app.neura.repository.TaskRepository;
 import static org.assertj.core.api.Assertions.*;
@@ -42,6 +43,9 @@ public class TaskServiceTest {
     @InjectMocks
     private TaskService taskService;
 
+    @Mock
+    private UserService userService;
+
     private User testUser;
     private Project testProject;
     private Task testTask;
@@ -49,6 +53,8 @@ public class TaskServiceTest {
 
     @BeforeEach
     void set() {
+        lenient().doNothing().when(userService).guardDemoAccount(any());
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setEmail("task@test.com");
@@ -187,4 +193,6 @@ public class TaskServiceTest {
 
         verify(taskRepository, never()).delete(any());
     }
+
+
 }

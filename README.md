@@ -43,7 +43,6 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 
 The backend enforces ownership at the service layer — every resource query is scoped to the authenticated user. Returning 404 instead of 403 on ownership mismatches prevents leaking resource existence to other users.
 
-See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full system design, security model, and architecture decisions.
 
 ---
 
@@ -53,8 +52,8 @@ See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full system design, security m
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/neura.git
-cd neura
+git clone https://github.com/zackaad-dev/neura-fullstack
+cd neura-fullstack
 
 # Start database only
 docker compose -f docker-compose.dev.yml up -d
@@ -95,16 +94,7 @@ cd backend
 
 ---
 
-## Documentation
-
-- [Architecture Overview](./docs/ARCHITECTURE.md) — system design, security model, ADR log
-- [Development Guide](./docs/DEVELOPMENT.md) — local setup, branching, conventions
-- [Deployment Guide](./docs/DEPLOYMENT.md) — infrastructure, CI/CD pipeline
-- [Testing Strategy](./docs/TESTING_STRATEGY.md) — pyramid, tooling, what's intentionally skipped
-
----
-
-## Roadmap
+## Planned features
 
 These are planned features being actively developed:
 
@@ -132,4 +122,4 @@ neura/
 
 ---
 
-Built by [Your Name] · [LinkedIn](#) · [Portfolio](#)
+Built by Zackaria Aaden · [LinkedIn](https://www.linkedin.com/in/zackaria-a-320a21278/) · [Portfolio](https://zackaad-dev.github.io/portofolio/)
