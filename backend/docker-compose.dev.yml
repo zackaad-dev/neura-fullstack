@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: neura-db-dev
+    environment:
+      POSTGRES_DB: neura_dev
+      POSTGRES_USER: neura
+      POSTGRES_PASSWORD: neura_secret
+    ports:
+      - "5433:5432"
+    volumes:
+      - neura_dev_data:/var/lib/postgresql/data
+
+volumes:
+  neura_dev_data:
