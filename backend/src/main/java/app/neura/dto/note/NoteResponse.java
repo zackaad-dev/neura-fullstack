@@ -1,4 +1,12 @@
 package app.neura.dto.note;
 
-public class NoteResponse {
-}
+import java.time.LocalDateTime;
+
+public record NoteResponse(
+   Long id,
+   Long projectId,
+   String title,
+   String content,
+   LocalDateTime createdAt,
+   LocalDateTime updatedAt
+) {}

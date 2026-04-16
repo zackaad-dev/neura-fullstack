@@ -52,7 +52,7 @@ public class TaskServiceTest {
 
 
     @BeforeEach
-    void set() {
+    void setUp() {
         lenient().doNothing().when(userService).guardDemoAccount(any());
 
         testUser = new User();

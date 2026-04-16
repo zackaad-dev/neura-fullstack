@@ -6,9 +6,17 @@ interface DeleteConfirmationModalProps {
   onConfirm: () => void
   isLoading?: boolean
   title: string
+  itemType?: string
 }
 
-export function DeleteConfirmationModal({ isOpen, onClose, onConfirm, isLoading, title }: DeleteConfirmationModalProps) {
+export function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  title,
+  itemType = 'task',
+}: DeleteConfirmationModalProps) {
   if (!isOpen) return null
 
   return (
@@ -16,7 +24,9 @@ export function DeleteConfirmationModal({ isOpen, onClose, onConfirm, isLoading,
       <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-xl font-bold text-black dark:text-white">Delete Task</h2>
+          <h2 className="text-xl font-bold text-black dark:text-white capitalize">
+            Delete {itemType}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
@@ -28,7 +38,8 @@ export function DeleteConfirmationModal({ isOpen, onClose, onConfirm, isLoading,
         {/* Content */}
         <div className="p-6">
           <p className="text-gray-700 dark:text-gray-300">
-            Are you sure you want to delete the task <strong>"{title}"</strong>? This action cannot be undone.
+            Are you sure you want to delete the {itemType} <strong>"{title}"</strong>? This action
+            cannot be undone.
           </p>
         </div>
 
