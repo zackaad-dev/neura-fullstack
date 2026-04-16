@@ -40,3 +40,4 @@ frontend/.vite/
 # OS
 Thumbs.db
 dev.sh
+test_new_feature.sh
