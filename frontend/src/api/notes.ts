@@ -22,7 +22,7 @@ export interface UpdateNoteDto {
 export const noteKeys = {
   all: ['notes'] as const,
   lists: () => [...noteKeys.all, 'list'] as const,
-  list: (projectId: number) => ['notes', projectId] as const, // As specified in custom prompt ['notes', projectId]
+  list: (projectId: number) => ['notes', projectId] as const,
   details: () => [...noteKeys.all, 'detail'] as const,
   detail: (id: number) => [...noteKeys.details(), id] as const,
 }

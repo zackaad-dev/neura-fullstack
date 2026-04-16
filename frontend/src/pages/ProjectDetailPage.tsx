@@ -50,10 +50,7 @@ export default function ProjectDetailPage() {
     enabled: !!projectId,
   })
 
-  const {
-    data: tasks,
-    isLoading: isTasksLoading,
-  } = useQuery({
+  const { data: tasks, isLoading: isTasksLoading } = useQuery({
     queryKey: projectId ? taskKeys.list(projectId) : [],
     queryFn: () => (projectId ? getTasks(projectId) : Promise.reject('Invalid project ID')),
     enabled: !!projectId,
@@ -64,15 +61,16 @@ export default function ProjectDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.list(projectId!) })
       setIsTaskModalOpen(false)
-    }
+    },
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: CreateTaskDto | UpdateTaskDto }) => updateTask(id, data),
+    mutationFn: ({ id, data }: { id: number; data: CreateTaskDto | UpdateTaskDto }) =>
+      updateTask(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.list(projectId!) })
       setEditingTask(null)
-    }
+    },
   })
 
   const deleteMutation = useMutation({
@@ -80,13 +78,10 @@ export default function ProjectDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.list(projectId!) })
       setDeletingTask(null)
-    }
+    },
   })
 
-  const {
-    data: notes,
-    isLoading: isNotesLoading,
-  } = useQuery({
+  const { data: notes, isLoading: isNotesLoading } = useQuery({
     queryKey: projectId ? noteKeys.list(projectId) : [],
     queryFn: () => (projectId ? getNotes(projectId) : Promise.reject('Invalid project ID')),
     enabled: !!projectId,
@@ -99,15 +94,15 @@ export default function ProjectDetailPage() {
       setNewNoteTitle('')
       setNewNoteContent('')
       setNoteValidationError(null)
-    }
+    },
   })
 
   const updateNoteMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: UpdateNoteDto }) => updateNote(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateNoteDto }) => updateNote(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.list(projectId!) })
       setEditingNote(null)
-    }
+    },
   })
 
   const deleteNoteMutation = useMutation({
@@ -115,7 +110,7 @@ export default function ProjectDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noteKeys.list(projectId!) })
       setDeletingNote(null)
-    }
+    },
   })
 
   const toggleDark = () => {
@@ -250,9 +245,14 @@ export default function ProjectDetailPage() {
                   </div>
                 ) : tasks && tasks.length > 0 ? (
                   tasks.map((task) => (
-                    <div key={task.id} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl flex flex-col gap-2">
+                    <div
+                      key={task.id}
+                      className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl flex flex-col gap-2"
+                    >
                       <div className="flex items-start justify-between">
-                        <h3 className="text-sm font-medium text-black dark:text-white">{task.title}</h3>
+                        <h3 className="text-sm font-medium text-black dark:text-white">
+                          {task.title}
+                        </h3>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setEditingTask(task)}
@@ -271,7 +271,9 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                       {task.description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{task.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {task.description}
+                        </p>
                       )}
                       <div className="flex items-center gap-3 mt-1">
                         <StatusBadge status={task.status} />
@@ -332,9 +334,14 @@ export default function ProjectDetailPage() {
                   </div>
                 ) : notes && notes.length > 0 ? (
                   notes.map((note) => (
-                    <div key={note.id} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl flex flex-col gap-2">
+                    <div
+                      key={note.id}
+                      className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl flex flex-col gap-2"
+                    >
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-sm font-medium text-black dark:text-white line-clamp-1">{note.title}</h3>
+                        <h3 className="text-sm font-medium text-black dark:text-white line-clamp-1">
+                          {note.title}
+                        </h3>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
                             onClick={() => setEditingNote(note)}
@@ -354,7 +361,9 @@ export default function ProjectDetailPage() {
                       </div>
                       {note.content && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-words">
-                          {note.content.length > 100 ? `${note.content.slice(0, 100)}...` : note.content}
+                          {note.content.length > 100
+                            ? `${note.content.slice(0, 100)}...`
+                            : note.content}
                         </p>
                       )}
                       {note.createdAt && (

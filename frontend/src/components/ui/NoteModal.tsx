@@ -5,13 +5,21 @@ import type { NoteResponse, UpdateNoteDto } from '../../api/notes'
 interface NoteModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (payload: UpdateNoteDto) => void
+  /* eslint-disable-next-line no-unused-vars */
+  onSubmit: (data: UpdateNoteDto) => void
   initialData: NoteResponse
   isLoading?: boolean
   error?: string | null
 }
 
-export function NoteModal({ isOpen, onClose, onSubmit, initialData, isLoading, error }: NoteModalProps) {
+export function NoteModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
+  isLoading,
+  error,
+}: NoteModalProps) {
   const [title, setTitle] = useState(initialData?.title || '')
   const [content, setContent] = useState(initialData?.content || '')
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -32,7 +40,7 @@ export function NoteModal({ isOpen, onClose, onSubmit, initialData, isLoading, e
       return
     }
     setValidationError(null)
-    
+
     // We send only changed fields for update
     const payload: UpdateNoteDto = {}
     if (title !== initialData.title) payload.title = title
@@ -51,9 +59,7 @@ export function NoteModal({ isOpen, onClose, onSubmit, initialData, isLoading, e
       <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl max-w-2xl w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-xl font-bold text-black dark:text-white">
-            Edit Note
-          </h2>
+          <h2 className="text-xl font-bold text-black dark:text-white">Edit Note</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"

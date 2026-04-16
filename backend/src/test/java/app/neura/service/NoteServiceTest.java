@@ -1,6 +1,7 @@
 package app.neura.service;
 
 import app.neura.dto.note.CreateNoteRequest;
+import app.neura.dto.note.NoteResponse;
 import app.neura.dto.note.UpdateNoteRequest;
 import app.neura.entity.Note;
 import app.neura.entity.Project;
@@ -8,6 +9,7 @@ import app.neura.entity.User;
 import app.neura.exception.ResourceNotFoundException;
 import app.neura.repository.NoteRepository;
 import app.neura.repository.ProjectRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,33 +39,34 @@ public class NoteServiceTest {
     private NoteService noteService;
 
 
-    private User owner;
+    private User testUser;
     private Project project;
-    private Note note;
+    private Note testNote;
 
     @BeforeEach
     void setUp() {
         lenient().doNothing().when(userService).guardDemoAccount(any());
 
-        owner = new User();
-        owner.setId(1l);
+
+        testUser = new User();
+        testUser.setId(1L);
 
         project = new Project();
         project.setId(10L);
-        project.setUser(owner);
+        project.setUser(testUser);
 
-        note = new Note();
-        note.setId(100L);
-        note.setProject(project);
-        note.setTitle("Meeting notes");
-        note.setContent("Discussion about finance");
+        testNote = new Note();
+        testNote.setId(100L);
+        testNote.setProject(project);
+        testNote.setTitle("Meeting notes");
+        testNote.setContent("Discussion about finance");
     }
 
     @Test
     void createNote_success() {
         var request = new CreateNoteRequest("Meeting notes", "Discussed roadmap");
         when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
-        when(noteRepository.save(any(Note.class))).thenReturn(note);
+        when(noteRepository.save(any(Note.class))).thenReturn(testNote);
 
         var response = noteService.createNote(10L, request, 1L);
 
@@ -89,7 +92,7 @@ public class NoteServiceTest {
     @Test
     void listNotes_returnsOnlyProjectNotes() {
         when(projectRepository.findById(10L)).thenReturn(Optional.of(project));
-        when(noteRepository.findAllByProjectId(10L)).thenReturn(List.of(note));
+        when(noteRepository.findAllByProjectId(10L)).thenReturn(List.of(testNote));
 
         var result = noteService.listNotes(10L, 1L);
 
@@ -99,17 +102,18 @@ public class NoteServiceTest {
 
 
     @Test
-    void getNote_success() {
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
+    void getNoteById_success() {
+        when(noteRepository.findByIdAndProjectUserId(1L, testUser.getId())).thenReturn(Optional.of(testNote));
 
-        var response = noteService.getNote(100L, 1L);
+        NoteResponse response = noteService.getNote(1L, testUser.getId());
 
-        assertThat(response.id()).isEqualTo(100L);
+        Assertions.assertThat(response.title()).isEqualTo("Meeting notes");
     }
 
     @Test
     void getNote_notOwner_throws() {
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
+        when(noteRepository.findByIdAndProjectUserId(100L, 999L))
+                .thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class,
                 () -> noteService.getNote(100L, 999L));
     }
@@ -118,8 +122,8 @@ public class NoteServiceTest {
     @Test
     void updateNote_partialUpdate_titleOnly() {
         var request = new UpdateNoteRequest("New title", null);
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
-        when(noteRepository.save(any(Note.class))).thenReturn(note);
+        when(noteRepository.findByIdAndProjectUserId(100L, testUser.getId())).thenReturn(Optional.of(testNote));
+        when(noteRepository.save(any(Note.class))).thenReturn(testNote);
 
         noteService.updateNote(100L, request, 1L);
 
@@ -128,23 +132,28 @@ public class NoteServiceTest {
 
     @Test
     void updateNote_notOwner_throws() {
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
+        when(noteRepository.findByIdAndProjectUserId(100L, 999L))
+                .thenReturn(Optional.empty());
+
         assertThrows(ResourceNotFoundException.class,
                 () -> noteService.updateNote(100L, new UpdateNoteRequest("t", "c"), 999L));
     }
 
+
     @Test
     void deleteNote_success() {
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
+        when(noteRepository.findByIdAndProjectUserId(100L, testUser.getId()))
+                .thenReturn(Optional.of(testNote));
 
         noteService.deleteNote(100L, 1L);
 
-        verify(noteRepository).delete(note);
+        verify(noteRepository).delete(testNote);
     }
 
     @Test
     void deleteNote_notOwner_throws() {
-        when(noteRepository.findById(100L)).thenReturn(Optional.of(note));
+        when(noteRepository.findByIdAndProjectUserId(100L, 999L))
+                .thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class,
                 () -> noteService.deleteNote(100L, 999L));
     }
