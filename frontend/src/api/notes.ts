@@ -9,40 +9,28 @@ export interface NoteResponse {
   updatedAt: string
 }
 
-export interface CreateNoteDto {
+export interface CreateNoteRequest {
   title: string
   content?: string
 }
 
-export interface UpdateNoteDto {
+export interface UpdateNoteRequest {
   title?: string
   content?: string
 }
 
-export const noteKeys = {
-  all: ['notes'] as const,
-  lists: () => [...noteKeys.all, 'list'] as const,
-  list: (projectId: number) => ['notes', projectId] as const,
-  details: () => [...noteKeys.all, 'detail'] as const,
-  detail: (id: number) => [...noteKeys.details(), id] as const,
-}
-
-export function getNotes(projectId: number) {
+export function getNotes(projectId: number): Promise<NoteResponse[]> {
   return api.get<NoteResponse[]>(`/projects/${projectId}/notes`)
 }
 
-export function createNote(projectId: number, data: CreateNoteDto) {
-  return api.post<NoteResponse, CreateNoteDto>(`/projects/${projectId}/notes`, data)
+export function createNote(projectId: number, data: CreateNoteRequest): Promise<NoteResponse> {
+  return api.post<NoteResponse, CreateNoteRequest>(`/projects/${projectId}/notes`, data)
 }
 
-export function getNote(id: number) {
-  return api.get<NoteResponse>(`/notes/${id}`)
+export function updateNote(id: number, data: UpdateNoteRequest): Promise<NoteResponse> {
+  return api.put<NoteResponse, UpdateNoteRequest>(`/notes/${id}`, data)
 }
 
-export function updateNote(id: number, data: UpdateNoteDto) {
-  return api.put<NoteResponse, UpdateNoteDto>(`/notes/${id}`, data)
-}
-
-export function deleteNote(id: number) {
+export function deleteNote(id: number): Promise<void> {
   return api.delete<void>(`/notes/${id}`)
 }
