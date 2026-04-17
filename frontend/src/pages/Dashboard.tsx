@@ -8,6 +8,7 @@ import { getProjects, projectKeys } from '../features/projects/api'
 import type { Project } from '../features/projects/types'
 import { getTasks, taskKeys, createTask } from '../api/tasks'
 import type { CreateTaskDto } from '../api/tasks'
+import { getNotes } from '../api/notes'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { TaskModal } from '../components/ui/TaskModal'
 
@@ -32,6 +33,14 @@ function DashboardContent({ projects, onAddProject, onAddTask, selectedProjectFo
     })),
   })
 
+  const noteQueries = useQueries({
+    queries: (projects || []).map((project) => ({
+      queryKey: ['notes', project.id],
+      queryFn: () => getNotes(project.id),
+      enabled: !!projects,
+    })),
+  })
+
   const allTasks = useMemo(() => {
     return taskQueries
       .map((q, index) => {
@@ -51,19 +60,29 @@ function DashboardContent({ projects, onAddProject, onAddTask, selectedProjectFo
       })
   }, [taskQueries, projects])
 
+  const allNotes = useMemo(() => {
+    return noteQueries
+      .map((q) => q.data || [])
+      .flat()
+  }, [noteQueries])
+
   const stats = [
     { label: 'Projects', value: projects?.length ?? 0 },
     { label: 'Tasks', value: allTasks.length },
-    { label: 'Notes', value: 'Coming soon' },
+    { label: 'Notes', value: allNotes.length },
   ]
+
+  const firstProject = projects && projects.length > 0 ? projects[0].name : null
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-black dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Welcome back. Here’s what’s happening today.
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+          Welcome back.
         </p>
+        <h1 className="text-4xl font-bold text-black dark:text-white">
+          {firstProject ? firstProject : 'Dashboard'}
+        </h1>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">

@@ -7,8 +7,8 @@ import { Loader2 } from 'lucide-react'
 import { getProject, projectKeys } from '../features/projects/api'
 import { getTasks, createTask, updateTask, deleteTask, taskKeys } from '../api/tasks'
 import type { TaskResponse, CreateTaskDto, UpdateTaskDto } from '../api/tasks'
-import { getNotes, createNote, updateNote, deleteNote, noteKeys } from '../api/notes'
-import type { NoteResponse, CreateNoteDto, UpdateNoteDto } from '../api/notes'
+import { getNotes, updateNote, deleteNote } from '../api/notes'
+import type { NoteResponse, UpdateNoteRequest } from '../api/notes'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { TaskModal } from '../components/ui/TaskModal'
 import { NoteModal } from '../components/ui/NoteModal'
@@ -24,9 +24,6 @@ export default function ProjectDetailPage() {
   const [editingTask, setEditingTask] = useState<TaskResponse | null>(null)
   const [deletingTask, setDeletingTask] = useState<TaskResponse | null>(null)
 
-  const [newNoteTitle, setNewNoteTitle] = useState('')
-  const [newNoteContent, setNewNoteContent] = useState('')
-  const [noteValidationError, setNoteValidationError] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState<NoteResponse | null>(null)
   const [deletingNote, setDeletingNote] = useState<NoteResponse | null>(null)
 
@@ -82,25 +79,15 @@ export default function ProjectDetailPage() {
   })
 
   const { data: notes, isLoading: isNotesLoading } = useQuery({
-    queryKey: projectId ? noteKeys.list(projectId) : [],
+    queryKey: projectId ? ['notes', projectId] : [],
     queryFn: () => (projectId ? getNotes(projectId) : Promise.reject('Invalid project ID')),
     enabled: !!projectId,
   })
 
-  const createNoteMutation = useMutation({
-    mutationFn: (data: CreateNoteDto) => createNote(projectId!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: noteKeys.list(projectId!) })
-      setNewNoteTitle('')
-      setNewNoteContent('')
-      setNoteValidationError(null)
-    },
-  })
-
   const updateNoteMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateNoteDto }) => updateNote(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateNoteRequest }) => updateNote(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: noteKeys.list(projectId!) })
+      queryClient.invalidateQueries({ queryKey: ['notes', projectId!] })
       setEditingNote(null)
     },
   })
@@ -108,7 +95,7 @@ export default function ProjectDetailPage() {
   const deleteNoteMutation = useMutation({
     mutationFn: (id: number) => deleteNote(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: noteKeys.list(projectId!) })
+      queryClient.invalidateQueries({ queryKey: ['notes', projectId!] })
       setDeletingNote(null)
     },
   })
@@ -169,19 +156,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const handleCreateNote = () => {
-    if (!newNoteTitle.trim()) {
-      setNoteValidationError('Title is required')
-      return
-    }
-    setNoteValidationError(null)
-    createNoteMutation.mutate({
-      title: newNoteTitle,
-      content: newNoteContent.trim() || undefined,
-    })
-  }
-
-  const handleUpdateNote = (data: UpdateNoteDto) => {
+  const handleUpdateNote = (data: UpdateNoteRequest) => {
     if (editingNote) {
       updateNoteMutation.mutate({ id: editingNote.id, data })
     }
@@ -293,36 +268,15 @@ export default function ProjectDetailPage() {
 
             {/* Notes */}
             <div className="bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 flex flex-col">
-              <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wider mb-4">
-                Notes
-              </h2>
-
-              <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 p-4 rounded-xl mb-4">
-                {(noteValidationError || createNoteMutation.error) && (
-                  <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-xs">
-                    {noteValidationError || createNoteMutation.error?.message}
-                  </div>
-                )}
-                <input
-                  type="text"
-                  value={newNoteTitle}
-                  onChange={(e) => setNewNoteTitle(e.target.value)}
-                  placeholder="Note title"
-                  className="w-full mb-2 px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-                <textarea
-                  value={newNoteContent}
-                  onChange={(e) => setNewNoteContent(e.target.value)}
-                  placeholder="Note content (optional)"
-                  rows={2}
-                  className="w-full mb-3 px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold text-black dark:text-white uppercase tracking-wider">
+                  Notes
+                </h2>
                 <button
-                  onClick={handleCreateNote}
-                  disabled={createNoteMutation.isPending || !newNoteTitle.trim()}
-                  className="w-full py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition"
+                  onClick={() => navigate('/notes')}
+                  className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium rounded-lg transition"
                 >
-                  {createNoteMutation.isPending ? 'Saving...' : 'Add Note'}
+                  Go to notes
                 </button>
               </div>
 
@@ -342,7 +296,7 @@ export default function ProjectDetailPage() {
                         <h3 className="text-sm font-medium text-black dark:text-white line-clamp-1">
                           {note.title}
                         </h3>
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => setEditingNote(note)}
                             className="p-1.5 text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition"
@@ -360,7 +314,7 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                       {note.content && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-words">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
                           {note.content.length > 100
                             ? `${note.content.slice(0, 100)}...`
                             : note.content}
