@@ -7,8 +7,8 @@ import { Loader2 } from 'lucide-react'
 import { getProject, projectKeys } from '../features/projects/api'
 import { getTasks, createTask, updateTask, deleteTask, taskKeys } from '../api/tasks'
 import type { TaskResponse, CreateTaskDto, UpdateTaskDto } from '../api/tasks'
-import { getNotes, createNote, updateNote, deleteNote } from '../api/notes'
-import type { NoteResponse, CreateNoteRequest, UpdateNoteRequest } from '../api/notes'
+import { getNotes, updateNote, deleteNote } from '../api/notes'
+import type { NoteResponse, UpdateNoteRequest } from '../api/notes'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { TaskModal } from '../components/ui/TaskModal'
 import { NoteModal } from '../components/ui/NoteModal'
@@ -24,9 +24,6 @@ export default function ProjectDetailPage() {
   const [editingTask, setEditingTask] = useState<TaskResponse | null>(null)
   const [deletingTask, setDeletingTask] = useState<TaskResponse | null>(null)
 
-  const [newNoteTitle, setNewNoteTitle] = useState('')
-  const [newNoteContent, setNewNoteContent] = useState('')
-  const [noteValidationError, setNoteValidationError] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState<NoteResponse | null>(null)
   const [deletingNote, setDeletingNote] = useState<NoteResponse | null>(null)
 
@@ -85,16 +82,6 @@ export default function ProjectDetailPage() {
     queryKey: projectId ? ['notes', projectId] : [],
     queryFn: () => (projectId ? getNotes(projectId) : Promise.reject('Invalid project ID')),
     enabled: !!projectId,
-  })
-
-  const createNoteMutation = useMutation({
-    mutationFn: (data: CreateNoteRequest) => createNote(projectId!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes', projectId!] })
-      setNewNoteTitle('')
-      setNewNoteContent('')
-      setNoteValidationError(null)
-    },
   })
 
   const updateNoteMutation = useMutation({
@@ -167,18 +154,6 @@ export default function ProjectDetailPage() {
     if (deletingTask) {
       deleteMutation.mutate(deletingTask.id)
     }
-  }
-
-  const handleCreateNote = () => {
-    if (!newNoteTitle.trim()) {
-      setNoteValidationError('Title is required')
-      return
-    }
-    setNoteValidationError(null)
-    createNoteMutation.mutate({
-      title: newNoteTitle,
-      content: newNoteContent.trim() || undefined,
-    })
   }
 
   const handleUpdateNote = (data: UpdateNoteRequest) => {
