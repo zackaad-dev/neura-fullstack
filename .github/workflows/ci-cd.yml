@@ -53,6 +53,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
+          command_timeout: 30m
           script: |
             cd /root/neura-fullstack
             git pull origin main
