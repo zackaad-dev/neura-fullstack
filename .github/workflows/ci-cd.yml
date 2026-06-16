@@ -57,5 +57,7 @@ jobs:
           script: |
             cd /root/neura-fullstack
             git pull origin main
-            docker compose up -d --build
+            docker compose stop frontend
+            docker compose build backend
+            docker compose up -d backend frontend
             docker image prune -f
