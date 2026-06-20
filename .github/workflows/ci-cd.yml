@@ -1,5 +1,8 @@
 name: CI/CD
 
+env:
+  DOCKER_BUILDKIT: "1"
+
 on:
   push:
     branches: [main, dev]
@@ -56,7 +59,7 @@ jobs:
           command_timeout: 30m
           script: |
             cd /root/neura-fullstack
-            git pull origin main
+            git fetch origin main && git reset --hard origin/main
             docker compose stop frontend
             docker compose build backend
             docker compose up -d backend frontend
