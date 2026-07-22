@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, dev]
 
+env:
+  DOCKER_BUILDKIT: 1
+
 jobs:
   backend:
     runs-on: ubuntu-latest

@@ -27,8 +27,11 @@ services:
       JWT_SECRET: "${JWT_SECRET}"
       JWT_EXPIRATION_MS: "${JWT_EXPIRATION_MS}"
       CORS_ORIGINS: "${CORS_ORIGINS}"
-    ports:
-      - "8080:8080"
+    # No host port mapping — only Nginx (frontend) should be reachable from
+    # outside. Backend is reached over the internal Docker network at
+    # neura-backend:8080 (Nginx proxy_pass target).
+    expose:
+      - "8080"
     depends_on:
       postgres:
         condition: service_healthy
