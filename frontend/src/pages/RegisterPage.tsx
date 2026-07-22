@@ -57,7 +57,7 @@ function RegisterPage() {
       return false
     }
     return true
-  }
+  } 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
