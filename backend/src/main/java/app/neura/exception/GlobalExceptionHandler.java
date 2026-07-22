@@ -1,5 +1,6 @@
 package app.neura.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import app.neura.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -39,6 +41,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleGeneral(
             Exception ex,
             HttpServletRequest request) {
+    log.error("Unexpected error at {}", request.getRequestURI(), ex);
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred", request.getRequestURI());
     }
