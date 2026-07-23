@@ -41,11 +41,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Log out user")
-    public ResponseEntity<AuthResponse> logout(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
     }
 
 
