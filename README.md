@@ -17,7 +17,7 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 
 **Frontend:** React 18, TypeScript, Vite, TanStack Query, shadcn/ui, Tailwind CSS
 
-**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Hetzner, Let's Encrypt
+**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Azure VM (B2ls_v2), Let's Encrypt
 
 ---
 

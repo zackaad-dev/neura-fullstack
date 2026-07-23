@@ -1,3 +1,5 @@
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Icon } from '../icons/Icons'
 import type { NoteResponse } from '../../api/notes'
 
@@ -29,12 +31,11 @@ export function NoteViewerModal({ isOpen, onClose, note }: NoteViewerModalProps)
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {note.content && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-              {note.content}
-            </p>
-          )}
-          {!note.content && (
+          {note.content ? (
+            <div className="text-sm text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.content}</ReactMarkdown>
+            </div>
+          ) : (
             <p className="text-sm italic text-gray-500 dark:text-gray-400">No content</p>
           )}
         </div>

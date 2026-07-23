@@ -24,6 +24,7 @@ public class UserService {
     }
 
     public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        guardDemoAccount(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (request.displayName() != null) {
