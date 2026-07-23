@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { Sidebar } from '../components/layout/Sidebar'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProjects, projectKeys } from '../features/projects/api'
@@ -20,6 +22,7 @@ function NotesPage() {
   // Note form state
   const [newNoteTitle, setNewNoteTitle] = useState('')
   const [newNoteContent, setNewNoteContent] = useState('')
+  const [createMode, setCreateMode] = useState<'edit' | 'preview'>('edit')
   const [noteValidationError, setNoteValidationError] = useState<string | null>(null)
 
   // Edit / Delete / View state
@@ -177,13 +180,53 @@ function NotesPage() {
                     />
                   </div>
                   <div>
-                    <textarea
-                      value={newNoteContent}
-                      onChange={(e) => setNewNoteContent(e.target.value)}
-                      placeholder="Note content (optional)"
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Content (Markdown)
+                      </label>
+                      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 p-0.5 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <button
+                          type="button"
+                          onClick={() => setCreateMode('edit')}
+                          className={`px-2 py-0.5 text-xs font-medium rounded-md transition ${
+                            createMode === 'edit'
+                              ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                          }`}
+                        >
+                          Write
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCreateMode('preview')}
+                          className={`px-2 py-0.5 text-xs font-medium rounded-md transition ${
+                            createMode === 'preview'
+                              ? 'bg-white dark:bg-black text-black dark:text-white shadow-xs'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                          }`}
+                        >
+                          Preview
+                        </button>
+                      </div>
+                    </div>
+
+                    {createMode === 'edit' ? (
+                      <textarea
+                        value={newNoteContent}
+                        onChange={(e) => setNewNoteContent(e.target.value)}
+                        placeholder="Note content (Markdown supported)..."
+                        rows={5}
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      />
+                    ) : (
+                      <div className="min-h-[120px] p-3 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-950 text-sm text-black dark:text-white prose dark:prose-invert max-w-none">
+                        {newNoteContent.trim() ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{newNoteContent}</ReactMarkdown>
+                        ) : (
+                          <p className="text-gray-400 italic text-xs">Nothing to preview</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={handleCreateNote}

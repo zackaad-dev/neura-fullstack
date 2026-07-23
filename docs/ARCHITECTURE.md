@@ -7,7 +7,7 @@ Neura is a full-stack productivity app. The backend is a REST API in Spring Boot
 
 ![System Architecture](./diagrams/system_architecture.png)
 
-The whole stack runs in Docker containers on a single Digital Ocean droplet. Nginx handles SSL termination (Let's Encrypt), serves the React build as static files, and proxies `/api/*` requests to Spring Boot on port 8080.
+The whole stack runs in Docker containers on a single Azure VM (Standard B2ls_v2, 4GB RAM). Nginx handles SSL termination (Let's Encrypt), serves the React build as static files, and proxies `/api/v1/*` requests to Spring Boot on port 8080.
  
 ---
 
