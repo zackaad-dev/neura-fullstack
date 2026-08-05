@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
 import { getProjects, deleteProject, projectKeys, type Project } from '../../features/projects/api'
 import { AddProjectModal } from './AddProjectModal'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { useLogout } from '../../hooks/useLogout'
+import { usersApi } from '../../api/users'
 import { getEmail } from '../../lib/auth'
 
 type SettingsPage =
@@ -30,6 +32,17 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const displayLabel = user?.displayName ?? fallbackEmail ?? 'User'
   const emailLabel = user?.email ?? fallbackEmail ?? 'Unknown email'
 
+  // Password State
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordMessage, setPasswordMessage] = useState<{ text: string; error: boolean } | null>(null)
+
+  // Delete Account State
+  const [typedEmail, setTypedEmail] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const logout = useLogout()
   const queryClient = useQueryClient()
 
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
@@ -45,6 +58,30 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
     },
   })
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: usersApi.updatePassword,
+    onSuccess: () => {
+      setPasswordMessage({ text: 'Password updated successfully!', error: false })
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    },
+    onError: (err: Error) => {
+      setPasswordMessage({ text: err.message || 'Failed to update password', error: true })
+    },
+  })
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: usersApi.deleteAccount,
+    onSuccess: () => {
+      onClose()
+      logout()
+    },
+    onError: (err: Error) => {
+      setDeleteError(err.message || 'Failed to delete account')
+    },
+  })
+
   const handleEditProject = (project: Project) => {
     setEditingProject(project)
     setIsEditModalOpen(true)
@@ -53,6 +90,34 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false)
     setEditingProject(null)
+  }
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentPassword) {
+      setPasswordMessage({ text: 'Current password is required', error: true })
+      return
+    }
+    if (newPassword.length < 6) {
+      setPasswordMessage({ text: 'New password must be at least 6 characters', error: true })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ text: 'New passwords do not match', error: true })
+      return
+    }
+    setPasswordMessage(null)
+    updatePasswordMutation.mutate({ currentPassword, newPassword })
+  }
+
+  const handleDeleteAccountSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (typedEmail.trim().toLowerCase() !== emailLabel.trim().toLowerCase()) {
+      setDeleteError('Typed email does not match account email')
+      return
+    }
+    setDeleteError(null)
+    deleteAccountMutation.mutate()
   }
 
   if (!isOpen) return null
@@ -146,24 +211,30 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
           <div className="flex-1 p-6 overflow-y-auto">
             {currentPage === 'profile' && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-lg font-semibold text-black dark:text-white">Profile</h3>
-                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
-                    Coming soon
-                  </span>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-black dark:text-white">Profile Details</h3>
+                  {user?.demo ? (
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                      Demo Account (Read-Only)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      Standard Account
+                    </span>
+                  )}
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 bg-gray-50 dark:bg-gray-950 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Display name
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                      Display Name
                     </p>
                     <p className="text-sm font-semibold text-black dark:text-white">
                       {displayLabel}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Email
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                      Email Address
                     </p>
                     <p className="text-sm font-semibold text-black dark:text-white">{emailLabel}</p>
                   </div>
@@ -173,24 +244,42 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
 
             {currentPage === 'password' && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-black dark:text-white">
                     Change Password
                   </h3>
-                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
-                    Coming soon
-                  </span>
                 </div>
-                <div className="space-y-4">
+
+                {user?.demo && (
+                  <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 rounded-lg text-xs">
+                    Password change is disabled for demo accounts.
+                  </div>
+                )}
+
+                {passwordMessage && (
+                  <div
+                    className={`p-3 mb-4 rounded-lg text-xs font-medium ${
+                      passwordMessage.error
+                        ? 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                        : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
+                    }`}
+                  >
+                    {passwordMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={handlePasswordSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Current Password
                     </label>
                     <input
                       type="password"
-                      placeholder="Coming soon"
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      disabled={user?.demo}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>
@@ -199,9 +288,11 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="password"
-                      placeholder="Coming soon"
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      disabled={user?.demo}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>
@@ -210,56 +301,75 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </label>
                     <input
                       type="password"
-                      placeholder="Coming soon"
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      disabled={user?.demo}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <button
-                    disabled
-                    className="w-full px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium transition mt-2 opacity-70 cursor-not-allowed"
+                    type="submit"
+                    disabled={updatePasswordMutation.isPending || user?.demo}
+                    className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition mt-2"
                   >
-                    Update Password
+                    {updatePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
                   </button>
-                </div>
+                </form>
               </div>
             )}
 
             {currentPage === 'delete-account' && (
               <div>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-black dark:text-white">
                     Delete Account
                   </h3>
-                  <span className="text-xs italic text-gray-500 dark:text-gray-400">
-                    Coming soon
-                  </span>
                 </div>
                 <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-red-800 dark:text-red-400">
-                    This action is permanent and cannot be undone. All your data will be deleted
-                    immediately.
+                  <p className="text-sm text-red-800 dark:text-red-400 font-medium">
+                    This action is permanent and cannot be undone. All your projects, tasks, and notes will be deleted immediately.
                   </p>
                 </div>
-                <div className="space-y-4">
+
+                {user?.demo && (
+                  <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 rounded-lg text-xs">
+                    Account deletion is disabled for demo accounts.
+                  </div>
+                )}
+
+                {deleteError && (
+                  <div className="p-3 mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-xs font-medium">
+                    {deleteError}
+                  </div>
+                )}
+
+                <form onSubmit={handleDeleteAccountSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Type your email to confirm
+                      Type your email (<span className="font-semibold text-black dark:text-white">{emailLabel}</span>) to confirm
                     </label>
                     <input
                       type="email"
-                      value={emailLabel}
-                      disabled
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-100 dark:bg-gray-900 text-black dark:text-white text-sm"
+                      value={typedEmail}
+                      onChange={(e) => setTypedEmail(e.target.value)}
+                      placeholder={emailLabel}
+                      disabled={user?.demo}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <button
-                    disabled
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium transition opacity-70 cursor-not-allowed"
+                    type="submit"
+                    disabled={
+                      deleteAccountMutation.isPending ||
+                      typedEmail.trim().toLowerCase() !== emailLabel.trim().toLowerCase() ||
+                      user?.demo
+                    }
+                    className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition"
                   >
-                    Permanently Delete Account
+                    {deleteAccountMutation.isPending ? 'Deleting Account...' : 'Permanently Delete Account'}
                   </button>
-                </div>
+                </form>
               </div>
             )}
 

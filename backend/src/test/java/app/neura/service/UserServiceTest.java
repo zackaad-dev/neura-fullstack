@@ -1,16 +1,19 @@
 package app.neura.service;
 
+import app.neura.dto.profile.UpdatePasswordRequest;
 import app.neura.dto.profile.UpdateProfileRequest;
 import app.neura.dto.profile.UserResponse;
 import app.neura.entity.User;
 import app.neura.exception.DemoAccountException;
 import app.neura.exception.ResourceNotFoundException;
+import app.neura.exception.WrongLoginCredentialsException;
 import app.neura.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -24,6 +27,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -91,6 +97,80 @@ class UserServiceTest {
                 .isInstanceOf(DemoAccountException.class);
 
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updatePassword_withValidCurrentPassword_updatesPasswordHash() {
+        User user = User.builder()
+                .id(1L)
+                .email("user@neura.dev")
+                .passwordHash("oldHash")
+                .demo(false)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldPass", "oldHash")).thenReturn(true);
+        when(passwordEncoder.encode("newPass123")).thenReturn("newHash");
+
+        UpdatePasswordRequest request = new UpdatePasswordRequest("oldPass", "newPass123");
+        userService.updatePassword(1L, request);
+
+        assertThat(user.getPasswordHash()).isEqualTo("newHash");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updatePassword_withInvalidCurrentPassword_throwsException() {
+        User user = User.builder()
+                .id(1L)
+                .email("user@neura.dev")
+                .passwordHash("oldHash")
+                .demo(false)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongPass", "oldHash")).thenReturn(false);
+
+        UpdatePasswordRequest request = new UpdatePasswordRequest("wrongPass", "newPass123");
+
+        assertThatThrownBy(() -> userService.updatePassword(1L, request))
+                .isInstanceOf(WrongLoginCredentialsException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updatePassword_forDemoUser_throwsDemoAccountException() {
+        User demoUser = User.builder().id(2L).demo(true).build();
+        when(userRepository.findById(2L)).thenReturn(Optional.of(demoUser));
+
+        UpdatePasswordRequest request = new UpdatePasswordRequest("oldPass", "newPass123");
+
+        assertThatThrownBy(() -> userService.updatePassword(2L, request))
+                .isInstanceOf(DemoAccountException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteAccount_forRegularUser_deletesUser() {
+        User user = User.builder().id(1L).demo(false).build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        userService.deleteAccount(1L);
+
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    void deleteAccount_forDemoUser_throwsDemoAccountException() {
+        User demoUser = User.builder().id(2L).demo(true).build();
+        when(userRepository.findById(2L)).thenReturn(Optional.of(demoUser));
+
+        assertThatThrownBy(() -> userService.deleteAccount(2L))
+                .isInstanceOf(DemoAccountException.class);
+
+        verify(userRepository, never()).delete(any());
     }
 
     @Test

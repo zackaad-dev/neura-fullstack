@@ -77,4 +77,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(WrongLoginCredentialsException.class)
+    public ResponseEntity<ApiError> handleWrongCredentials(
+            WrongLoginCredentialsException ex, HttpServletRequest request) {
+        return buildError(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
+
 }
