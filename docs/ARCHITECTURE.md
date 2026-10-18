@@ -28,22 +28,23 @@ The backend follows a standard layered architecture: Controller → Service → 
 ```
 app.neura
 ├── config/          SecurityConfig, CorsConfig
-├── controller/      AuthController, ProjectController, TaskController, NoteController
+├── controller/      AuthController, ProjectController, TaskController, NoteController, UserController
 ├── dto/
-│   ├── request/     RegisterRequest, LoginRequest, CreateProjectRequest, ...
-│   └── response/    AuthResponse, ProjectResponse, TaskResponse, NoteResponse, ApiError
-├── entity/          User, Project, Task, Note
-├── exception/       GlobalExceptionHandler, EmailAlreadyExistsException, ResourceNotFoundException
-├── repository/      UserRepository, ProjectRepository, TaskRepository, NoteRepository
+│   ├── auth/        RegisterRequest, LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, ForgotPasswordResponse, AuthResponse
+│   ├── profile/     UpdateProfileRequest, UpdatePasswordRequest, UserResponse
+│   └── ...          CreateProjectRequest, TaskResponse, NoteResponse, ApiError
+├── entity/          User, Project, Task, Note, PasswordResetToken
+├── exception/       GlobalExceptionHandler, EmailAlreadyExistsException, ResourceNotFoundException, DemoAccountException, InvalidTokenException
+├── repository/      UserRepository, ProjectRepository, TaskRepository, NoteRepository, PasswordResetTokenRepository
 ├── security/        JwtUtil, JwtAuthenticationFilter
-└── service/         AuthService, ProjectService, TaskService, NoteService
+└── service/         AuthService, ProjectService, TaskService, NoteService, UserService
 ```
  
 ---
 
 ## Database Schema
 
-Four tables. Users own projects, projects contain tasks and notes. Foreign keys enforce referential integrity, and cascade deletes mean removing a project cleans up its tasks and notes automatically.
+Five tables. Users own projects, projects contain tasks and notes. The `password_reset_tokens` table tracks single-use password reset tokens with explicit expiration dates. Foreign keys enforce referential integrity, and cascade deletes clean up associated resources automatically.
 
 ![ER Diagram](./diagrams/neura_er_diagram.svg)
 
@@ -105,8 +106,10 @@ No stack traces leak to the client. The mapping:
 |---|---|---|
 | `EmailAlreadyExistsException` | 409 Conflict | Duplicate registration |
 | `ResourceNotFoundException` | 404 Not Found | Resource missing or not owned |
+| `InvalidTokenException` | 400 Bad Request | Invalid, expired, or used reset token |
+| `DemoAccountException` | 403 Forbidden | Attempted modification/reset on demo account |
 | `MethodArgumentNotValidException` | 400 Bad Request | Bean Validation failure |
-| `AuthenticationException` | 401 Unauthorized | Bad credentials |
+| `AuthenticationException` / `WrongLoginCredentialsException` | 401 Unauthorized | Bad credentials |
 | Unhandled exceptions | 500 Internal Server Error | Unexpected failures |
 
 **Debugging tip from development:** the response *format* tells you which layer is failing. If the error comes back in Spring Security's default shape (`{ timestamp, status, error, message }`), it's the security filter chain. If it's the `ApiError` envelope above, your code is running but throwing.

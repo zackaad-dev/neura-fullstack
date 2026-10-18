@@ -87,4 +87,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiError> handleInvalidToken(
+            InvalidTokenException ex, HttpServletRequest request) {
+        return buildError(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+    }
 }
+

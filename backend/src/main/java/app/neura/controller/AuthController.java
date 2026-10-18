@@ -1,8 +1,11 @@
 package app.neura.controller;
 
+import app.neura.dto.auth.AuthResponse;
+import app.neura.dto.auth.ForgotPasswordRequest;
+import app.neura.dto.auth.ForgotPasswordResponse;
 import app.neura.dto.auth.LoginRequest;
 import app.neura.dto.auth.RegisterRequest;
-import app.neura.dto.auth.AuthResponse;
+import app.neura.dto.auth.ResetPasswordRequest;
 import app.neura.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,10 +19,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Register and login endpoints")
+@Tag(name = "Authentication", description = "Authentication and password management endpoints")
 public class AuthController {
 
     private final AuthService authService;
@@ -47,5 +52,19 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Request a password reset token")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        ForgotPasswordResponse response = authService.forgotPassword(request);
+        return ResponseEntity.ok(response);
+    }
 
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Reset password using a token")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Password has been successfully reset"));
+    }
 }

@@ -17,6 +17,7 @@ This file serves as the master index.
 | [005](./adr/005-flyway-over-hibernate-ddl.md) | Use Flyway for Schema Management over Hibernate DDL | Accepted | 2026-02-20 |
 | [006](./adr/006-testcontainers-over-mocking.md) | Use Testcontainers over In-Memory DB Mocking | Accepted | 2026-02-20 |
 | [007](./adr/007-manual-dto-mapping.md) | Manual DTO Mapping over MapStruct | Accepted | 2026-02-20 |
+| [008](./adr/008-password-reset-tokens.md) | Single-Use Database Tokens for Password Reset Flow | Accepted | 2026-09-07 |
 
 ---
 
@@ -81,4 +82,8 @@ Testcontainers runs integration tests against a real PostgreSQL instance, catchi
 
 ### ADR-007 — Manual DTO Mapping over MapStruct
 Manual mapping makes the transformation logic explicit and immediately readable to any reviewer without needing to understand an annotation processor. MapStruct would reduce boilerplate at the cost of "magic" that is harder to debug. Trade-off: more verbose code, acceptable for the scale of this project.
+
+### ADR-008 — Single-Use Database Tokens for Password Reset Flow
+Password reset uses database-stored single-use tokens (`password_reset_tokens`) with a short 15-minute expiration time and explicit `used` flag. Demo accounts (`is_demo = true`) are guarded against password resets. Trade-off: requires database reads/writes during reset requests, but provides strict invalidation and single-use security guarantees.
+
 
