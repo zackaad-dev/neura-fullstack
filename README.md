@@ -1,6 +1,5 @@
 # Neura Fullstack Web-application
 
-
 # Neura
 
 A full-stack productivity app for managing projects and tasks. Built as a portfolio project to demonstrate professional backend engineering, clean architecture, and modern DevOps practices.
@@ -17,7 +16,7 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 
 **Frontend:** React 18, TypeScript, Vite, TanStack Query, shadcn/ui, Tailwind CSS
 
-**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Contabo VM, Let's Encrypt
+**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Contabo VPS, Let's Encrypt
 
 ---
 
@@ -43,7 +42,6 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 ```
 
 The backend enforces ownership at the service layer — every resource query is scoped to the authenticated user. Returning 404 instead of 403 on ownership mismatches prevents leaking resource existence to other users.
-
 
 ---
 
