@@ -17,13 +17,14 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 
 **Frontend:** React 18, TypeScript, Vite, TanStack Query, shadcn/ui, Tailwind CSS
 
-**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Azure VM (B2ls_v2), Let's Encrypt
+**DevOps:** Docker, Docker Compose, Nginx, GitHub Actions, Contabo VM, Let's Encrypt
 
 ---
 
 ## Features
 
 - JWT authentication — stateless, BCrypt password hashing, 24hr expiry
+- Password reset flow — token-based password reset for unauthenticated users with 15m expiration and demo guards
 - Project management — create, edit, delete with cascading task removal
 - Task management — status tracking (Todo / In Progress / Done), due dates, ownership-scoped queries
 - Demo account protection — read-only guard via `is_demo` flag, returns 403 on all mutations
@@ -73,7 +74,7 @@ App runs at `http://localhost:5173`, API at `http://localhost:8080/api/v1`.
 **Full stack via Docker:**
 
 ```bash
-cp .env.example .env   # fill in values
+cp .env.example .env   # fill in valuesf
 docker compose up --build
 ```
 
@@ -98,8 +99,8 @@ cd backend
 
 These are planned features being actively developed:
 
-- **Notes** — per-project markdown notes, backend complete, frontend in progress
-- **Password update** — authenticated users can change their own password
+- **Notes** — per-project markdown notes with live preview and project integration
+- **Password update & reset** — authenticated password updates and unauthenticated token-based password reset
 - **Account deletion** — full data wipe with confirmation flow
 - **Refresh tokens** — token rotation with Redis blocklist for proper logout invalidation
 - **Pagination** — cursor-based pagination on project and task list endpoints
