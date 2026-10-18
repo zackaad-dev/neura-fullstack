@@ -53,14 +53,15 @@ jobs:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.AZURE_HOST }}
-          username: ${{ secrets.AZURE_USER }}
-          key: ${{ secrets.AZURE_SSH_KEY }}
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 30m
           script: |
-            cd /root/neura-fullstack
+            cd /root/neura
             git fetch origin main && git reset --hard origin/main
-            docker compose stop frontend backend
             docker compose build backend frontend
             docker compose up -d backend frontend
             docker image prune -f
+
+# updated 18/10
