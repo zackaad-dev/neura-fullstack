@@ -26,6 +26,8 @@ A full-stack productivity app for managing projects and tasks. Built as a portfo
 - Password reset flow — token-based password reset for unauthenticated users with 15m expiration and demo guards
 - Project management — create, edit, delete with cascading task removal
 - Task management — status tracking (Todo / In Progress / Done), due dates, ownership-scoped queries
+- Notes — per-project markdown notes with live preview and project integration
+- Account management — editable display name, authenticated password update, account deletion with confirmation
 - Demo account protection — read-only guard via `is_demo` flag, returns 403 on all mutations
 - Consistent error envelope — all errors return `{ status, message, path, timestamp }`
 - Layered architecture — Controller → Service → Repository, DTOs at every boundary
@@ -88,21 +90,45 @@ cd backend
 ```
 
 - Unit tests: service layer with Mockito, no Spring context loaded
-- Integration tests: repository layer against real PostgreSQL via Testcontainers
 - Coverage: 70%+ on service layer (JaCoCo report at `target/site/jacoco/index.html`)
+
+Controller, integration, and frontend tests are not yet implemented — see [Roadmap](#roadmap).
 
 ---
 
-## Planned features
+## Roadmap
 
-These are planned features being actively developed:
+Known gaps, in roughly the order they should be tackled. The querying items are sequenced
+deliberately — each depends on the one above it.
 
-- **Notes** — per-project markdown notes with live preview and project integration
-- **Password update & reset** — authenticated password updates and unauthenticated token-based password reset
-- **Account deletion** — full data wipe with confirmation flow
-- **Refresh tokens** — token rotation with Redis blocklist for proper logout invalidation
-- **Pagination** — cursor-based pagination on project and task list endpoints
-- **Rate limiting** — auth endpoint protection
+**Querying & data access**
+
+- **Global task & note endpoints** — `GET /tasks` and `GET /notes` spanning all projects.
+  Tasks and notes are currently only reachable under `/projects/{projectId}/...`, so the
+  all-tasks view and the dashboard fan out one request per project and merge the results
+  client-side. This is a prerequisite for everything below it.
+- **Pagination** — cursor-based pagination on the list endpoints. The API exposes no query
+  parameters today; every list endpoint returns its full result set.
+- **Sorting** — a `sort` parameter (due date, created date, title). The only ordering that
+  exists now is a hardcoded client-side sort by creation date.
+- **Filtering** — filter tasks by status, due-date range, and project.
+- **Search** — full-text search across task and note titles and content.
+- **Supporting indexes** — on `tasks(status)`, `tasks(due_date)`, and the `created_at`
+  columns. Only foreign-key indexes exist today; filtering, sorting, and keyset pagination
+  all need these.
+
+**Auth & security**
+
+- **Rate limiting** — auth endpoint protection on login and password reset.
+- **Refresh tokens** — token rotation with a Redis blocklist. `POST /auth/logout` is
+  currently a no-op, so an issued JWT stays valid for its full 24h expiry.
+
+**Testing**
+
+- **Controller tests** — `@WebMvcTest` coverage for request validation and error envelopes.
+- **Integration tests** — repository and full-stack coverage against real PostgreSQL via
+  Testcontainers (the dependency is declared but not yet used).
+- **Frontend tests** — component and hook coverage.
 
 ---
 
