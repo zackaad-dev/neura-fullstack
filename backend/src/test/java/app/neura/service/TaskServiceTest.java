@@ -111,7 +111,7 @@ public class TaskServiceTest {
 
     @Test
     void updateTask_success() {
-        UpdateTaskRequest request = new UpdateTaskRequest("Updated Title", "Updated Description", TaskStatus.IN_PROGRESS);
+        UpdateTaskRequest request = new UpdateTaskRequest("Updated Title", "Updated Description", TaskStatus.IN_PROGRESS, LocalDate.of(2026, 12, 24));
         when(taskRepository.findByIdAndProjectUserId(1L, testUser.getId())).thenReturn(Optional.of(testTask));
         when(taskRepository.save(any(Task.class))).thenReturn(testTask);
 
@@ -121,6 +121,7 @@ public class TaskServiceTest {
         assertThat(testTask.getTitle()).isEqualTo("Updated Title");
         assertThat(testTask.getDescription()).isEqualTo("Updated Description");
         assertThat(testTask.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(testTask.getDueDate()).isEqualTo(LocalDate.of(2026, 12, 24));
         verify(taskRepository, times(1)).save(testTask);
     }
 
@@ -173,7 +174,7 @@ public class TaskServiceTest {
 
     @Test
     void updateTask_taskNotFound_throwsResourceNotFoundException() {
-        UpdateTaskRequest request = new UpdateTaskRequest("Updated Title", "Updated Description", TaskStatus.IN_PROGRESS);
+        UpdateTaskRequest request = new UpdateTaskRequest("Updated Title", "Updated Description", TaskStatus.IN_PROGRESS, LocalDate.of(2026, 12, 24));
         when(taskRepository.findByIdAndProjectUserId(1L, testUser.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.updateTask(1L, request, testUser.getId()))

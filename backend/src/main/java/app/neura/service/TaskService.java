@@ -62,14 +62,17 @@ public class TaskService {
         Task task = taskRepository.findByIdAndProjectUserId(taskId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
-        if (request.name() != null) {
-            task.setTitle(request.name());
+        if (request.title() != null) {
+            task.setTitle(request.title());
         }
         if (request.description() != null) {
             task.setDescription(request.description());
         }
         if (request.status() != null) {
             task.setStatus(request.status());
+        }
+        if (request.dueDate() != null) {
+            task.setDueDate(request.dueDate());
         }
 
         Task saved = taskRepository.save(task);

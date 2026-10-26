@@ -50,6 +50,7 @@ class AuthServiceTest {
         RegisterRequest req = new RegisterRequest();
         req.setEmail("test@example.com");
         req.setPassword("password123");
+        req.setDisplayName("Test User");
 
         when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashed");
@@ -60,6 +61,7 @@ class AuthServiceTest {
 
         assertThat(response.getToken()).isEqualTo("mock-jwt");
         assertThat(response.getEmail()).isEqualTo("test@example.com");
+        assertThat(response.getDisplayName()).isEqualTo("Test User");
         verify(userRepository).save(any(User.class));
     }
 
@@ -91,6 +93,7 @@ class AuthServiceTest {
         User user = User.builder()
                 .email(email)
                 .passwordHash(encodedPassword)
+                .displayName("Test User")
                 .build();
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
@@ -100,6 +103,8 @@ class AuthServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isEqualTo(mockToken);
+        assertThat(response.getEmail()).isEqualTo(email);
+        assertThat(response.getDisplayName()).isEqualTo("Test User");
 
         verify(userRepository).findByEmail(email);
         verify(passwordEncoder).matches(rawPassword, encodedPassword);

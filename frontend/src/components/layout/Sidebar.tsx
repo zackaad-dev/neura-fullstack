@@ -217,7 +217,7 @@ export function Sidebar({ activePage, dark, onToggleDark }: SidebarProps) {
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:text-white hover:bg-white/10 transition text-left"
         >
           <Icon.Settings />
-          <span>Indstillinger</span>
+          <span>Settings</span>
         </button>
 
         <div className="text-xs text-white/40 px-3 py-2.5">
