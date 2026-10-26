@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Icon } from '../icons/Icons'
 import { getProjects, deleteProject, projectKeys, type Project } from '../../features/projects/api'
 import { AddProjectModal } from './AddProjectModal'
-import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { useCurrentUser, userKeys } from '../../hooks/useCurrentUser'
 import { useLogout } from '../../hooks/useLogout'
 import { usersApi } from '../../api/users'
 import { getEmail } from '../../lib/auth'
@@ -29,8 +29,11 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { data: user } = useCurrentUser()
   const fallbackEmail = getEmail()
-  const displayLabel = user?.displayName ?? fallbackEmail ?? 'User'
   const emailLabel = user?.email ?? fallbackEmail ?? 'Unknown email'
+
+  // Profile State
+  const [displayNameInput, setDisplayNameInput] = useState('')
+  const [profileMessage, setProfileMessage] = useState<{ text: string; error: boolean } | null>(null)
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState('')
@@ -45,6 +48,11 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const logout = useLogout()
   const queryClient = useQueryClient()
 
+  // Seed the form once /users/me resolves, and re-seed after a successful save
+  useEffect(() => {
+    setDisplayNameInput(user?.displayName ?? '')
+  }, [user?.displayName])
+
   const { data: projects, isLoading: isLoadingProjects } = useQuery({
     queryKey: projectKeys.all,
     queryFn: getProjects,
@@ -55,6 +63,18 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
     mutationFn: deleteProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all })
+    },
+  })
+
+  const updateProfileMutation = useMutation({
+    mutationFn: usersApi.updateMe,
+    onSuccess: () => {
+      setProfileMessage({ text: 'Profile updated successfully!', error: false })
+      // Sidebar and header read the same query, so they pick the new name up
+      queryClient.invalidateQueries({ queryKey: userKeys.current })
+    },
+    onError: (err: Error) => {
+      setProfileMessage({ text: err.message || 'Failed to update profile', error: true })
     },
   })
 
@@ -90,6 +110,25 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false)
     setEditingProject(null)
+  }
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = displayNameInput.trim()
+    if (!trimmed) {
+      setProfileMessage({ text: 'Display name is required', error: true })
+      return
+    }
+    if (trimmed.length > 100) {
+      setProfileMessage({ text: 'Display name must not exceed 100 characters', error: true })
+      return
+    }
+    if (trimmed === (user?.displayName ?? '')) {
+      setProfileMessage({ text: 'No changes to save', error: false })
+      return
+    }
+    setProfileMessage(null)
+    updateProfileMutation.mutate({ displayName: trimmed })
   }
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
@@ -223,22 +262,62 @@ export function SettingsModal({ isOpen, onClose, isDark, onToggleDark }: Setting
                     </span>
                   )}
                 </div>
-                <div className="space-y-4 bg-gray-50 dark:bg-gray-950 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+                {user?.demo && (
+                  <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 rounded-lg text-xs">
+                    Profile editing is disabled for demo accounts.
+                  </div>
+                )}
+
+                {profileMessage && (
+                  <div
+                    className={`p-3 mb-4 rounded-lg text-xs font-medium ${
+                      profileMessage.error
+                        ? 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                        : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
+                    }`}
+                  >
+                    {profileMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
                   <div>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Display Name
-                    </p>
-                    <p className="text-sm font-semibold text-black dark:text-white">
-                      {displayLabel}
-                    </p>
+                    </label>
+                    <input
+                      type="text"
+                      value={displayNameInput}
+                      onChange={(e) => setDisplayNameInput(e.target.value)}
+                      placeholder="Your display name"
+                      maxLength={100}
+                      disabled={user?.demo}
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-black dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={emailLabel}
+                      readOnly
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-950 text-black dark:text-white text-sm opacity-60 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                      Email address cannot be changed.
                     </p>
-                    <p className="text-sm font-semibold text-black dark:text-white">{emailLabel}</p>
                   </div>
-                </div>
+                  <button
+                    type="submit"
+                    disabled={updateProfileMutation.isPending || user?.demo}
+                    className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition mt-2"
+                  >
+                    {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </form>
               </div>
             )}
 
