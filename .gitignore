@@ -43,3 +43,4 @@ dev.sh
 test_new_feature.sh
 backend-dev.sh
 scripts/
+bugs.md
